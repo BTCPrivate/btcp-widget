@@ -319,22 +319,22 @@ widget.onclick = function() {
 
 btcpWidget.doOverlay = function(vis) {
     var winH = window.innerHeight;
-    console.log(winH);
     var topH = (winH - 505) / 2;
     if (vis === "show") {
         setTimeout(function () {
-            get('btcpButtonOverlay').style.paddingTop = (topH+30)+"px";
+            get('btcpButtonOverlay').style.paddingTop = ((topH > 0 ? topH : 0) + 30)+"px";
             get('btcpButtonOverlay').style.background = "rgba(0,0,0,0.9)";
         },0);
         setTimeout(function () {
             get('btcpButtonOverlay').style.transition = "all 0.05s ease-in-out";
         },300);
         setTimeout(function () {
-            get('btcpButtonOverlay').style.paddingTop = (topH+30)+"px";
+            get('btcpButtonOverlay').style.paddingTop = ((topH > 0 ? topH : 0) + 40)+"px";
         },420);
     }
     if (vis === "hide") {
-        get('btcpButtonOverlay').style.paddingTop = (topH+30)+"px";
+        get('btcpButtonOverlay').style.transition = "all 0.05s ease-in-out";
+        get('btcpButtonOverlay').style.paddingTop = ((topH > 0 ? topH : 0) + 30)+"px";
         setTimeout(function () {
             get('btcpButtonOverlay').style.transition = "all 0.5s ease-in-out";
             get('btcpButtonOverlay').style.paddingTop = "1500px";
@@ -345,6 +345,10 @@ btcpWidget.doOverlay = function(vis) {
         setTimeout(function () {
             get('btcpButtonOverlay').style.display = "none";
         },620);
+    }
+    if (vis === "reposition" && get('btcpButtonOverlay').style.paddingTop !== "1500px") {
+        get('btcpButtonOverlay').style.transition = "0";
+        get('btcpButtonOverlay').style.paddingTop = ((topH > 0 ? topH : 0) + 30)+"px";
     }
 }
 
@@ -401,4 +405,8 @@ socket.on('order confirmation', function (data) {
           get('btcpButton').innerHTML = get('electrumButton').innerHTML = "Pay with $BTCP";
       },3000);
   }
+});
+
+window.addEventListener("resize", function(event) {
+    btcpWidget.doOverlay('reposition');
 });
