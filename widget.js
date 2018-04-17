@@ -1,4 +1,7 @@
-// BTCP widget - v0.2
+////////////////////////
+// BTCP Widget - v0.3 //
+////////////////////////
+btcpWidget.version = 0.3;
 
 btcpURI = 'bitcoin:'+btcpWidget.data.wallet+'?amount='+btcpWidget.data.amount+'&message=Pepperoni%20Pizza&label=Matts%20Pizza&extra=Size%Large';
 
@@ -53,6 +56,8 @@ btcpWidgetData = {
 // QR code size
 qrCodeWidth = 128;
 qrCodeHeight = 128;
+
+var approvalConfirmsNeeded = 6;
 
 // QR code generator
 (function(r){r.fn.qrcode=function(h){var s;function u(a){this.mode=s;this.data=a}function o(a,c){this.typeNumber=a;this.errorCorrectLevel=c;this.modules=null;this.moduleCount=0;this.dataCache=null;this.dataList=[]}function q(a,c){if(void 0==a.length)throw Error(a.length+"/"+c);for(var d=0;d<a.length&&0==a[d];)d++;this.num=Array(a.length-d+c);for(var b=0;b<a.length-d;b++)this.num[b]=a[b+d]}function p(a,c){this.totalCount=a;this.dataCount=c}function t(){this.buffer=[];this.length=0}u.prototype={getLength:function(){return this.data.length},
@@ -143,7 +148,9 @@ function outFunc() {
 }
 
 // On click of widget button, display in an overlay
-widget.onclick = function() {
+widget.onclick = function() {btcpWidget.showPaymentScreen();}
+
+btcpWidget.returnScreenHeading = function() {
     // Set overlay DOM styles
     var overlay = document.createElement("div");
     overlay.id = "btcpButtonOverlay";
@@ -174,17 +181,28 @@ widget.onclick = function() {
     closeLink.innerHTML = "x";
 
     var btcpFullLogo = document.createElement("div");
-//     btcpFullLogo.style.position = "relative";
     btcpFullLogo.style.display = "block";
     btcpFullLogo.style.margin = "0 auto 20px auto";
-//     btcpFullLogo.style.margintop = "8px";
-//     btcpFullLogo.style.left = "50px";
     btcpFullLogo.style.width = "320px";
     btcpFullLogo.style.height = "58px";
     btcpFullLogo.style.background = 'url(\'data:image/svg+xml;charset=UTF-8,'+btcpLogoFull+'\') no-repeat 0 0';
 	btcpFullLogo.style.backgroundSize = '320px 58px';
     btcpFullLogo.style.cursor = "pointer";
     btcpFullLogo.onclick = function(){window.open("https://btcprivate.org");};
+    btcpFullLogo.oncontextmenu = function(){
+        btcpWidget.incrLogoRightClicks(event);
+        return false;
+    };
+
+    return {'overlay':overlay,'closeLink':closeLink,'btcpFullLogo':btcpFullLogo};
+}
+
+btcpWidget.showPaymentScreen = function(anim) {
+    // Get heading
+    var headingElems = btcpWidget.returnScreenHeading();
+    var overlay = headingElems['overlay'];
+    var closeLink = headingElems['closeLink'];
+    var btcpFullLogo = headingElems['btcpFullLogo'];
 
     var payAmountText = document.createElement("div");
     payAmountText.style.margin = "0 auto";
@@ -237,7 +255,7 @@ widget.onclick = function() {
 	clipboard.style.backgroundSize = '20px 20px';
     clipboard.style.cursor = "pointer";
 
-    var walletButton = document.createElement("a");
+    /* var walletButton = document.createElement("a");
     walletButton.id = "electrumButton";
     walletButton.style.display = "block";
     walletButton.style.width = "176px";
@@ -248,6 +266,12 @@ widget.onclick = function() {
     walletButton.style.borderRadius = btcpWidgetData[btcpWidgetID]['border_radius'];
     walletButton.style.padding = "10px";
     walletButton.style.textDecoration = "none";
+    walletButton.innerHTML = "Pay via BTCP wallet";
+    walletButton.href = btcpURI; */
+
+    var walletButton = btcpWidget.returnButton();
+    walletButton.id = "electrumButton";
+    walletButton.style.width = "176px";
     walletButton.innerHTML = "Pay via BTCP wallet";
     walletButton.href = btcpURI;
 
@@ -278,10 +302,11 @@ widget.onclick = function() {
     qrCodeElem.style.padding = "10px";
     qrCodeElem.style.background = "#fff";
 
-    var alreadyPaidHeading = document.createElement("b");
-    alreadyPaidHeading.style.display = "block";
-    alreadyPaidHeading.style.marginBottom = "5px";
-    alreadyPaidHeading.innerHTML = "Order completes after:<br>6 confirmations";
+    var orderProgressInfo = document.createElement("b");
+    orderProgressInfo.id = "orderProgressInfo";
+    orderProgressInfo.style.display = "block";
+    orderProgressInfo.style.marginBottom = "5px";
+    orderProgressInfo.innerHTML = "Order completes after:<br>6 confirmations";
 
     var helpLink = document.createElement("a");
     helpLink.style.fontSize = "10px"
@@ -306,15 +331,104 @@ widget.onclick = function() {
     overlay.appendChild(walletGet);
     overlay.appendChild(qrCodeHeading);
     overlay.appendChild(qrCodeElem);
-    overlay.appendChild(alreadyPaidHeading);
+    overlay.appendChild(orderProgressInfo);
     overlay.appendChild(helpLink);
 
     // Add overlay with 4 options to merchants website
     document.body.insertAdjacentElement('afterend',overlay);
-    // TODO: re-add
-    btcpWidget.doOverlay('show');
+    // Do regular 'show' anim unless an anim specified
+    btcpWidget.doOverlay(!anim ? 'show' : anim);
 
     $('#qrCode').qrcode(btcpURI);
+}
+
+btcpWidget.showMerchantSupportScreen = function(anim) {
+    get('btcpButtonOverlay').parentNode.removeChild(get('btcpButtonOverlay'));
+    // Get heading
+    var headingElems = btcpWidget.returnScreenHeading();
+    var overlay = headingElems['overlay'];
+    var closeLink = headingElems['closeLink'];
+    var btcpFullLogo = headingElems['btcpFullLogo'];
+
+    var merchantSupportText = document.createElement("div");
+    merchantSupportText.style.margin = "0 auto";
+    merchantSupportText.innerHTML = 'Merchant Support';
+
+    var displaySetupInfoButton = btcpWidget.returnButton();
+    displaySetupInfoButton.style.width = "176px";
+    displaySetupInfoButton.style.cursor = "pointer";
+    displaySetupInfoButton.innerHTML = "Display Setup Info";
+    displaySetupInfoButton.onclick = function() {
+        btcpWidget.displayInfo();
+    }
+
+    var sendUsSetupInfoButton = btcpWidget.returnButton();
+    sendUsSetupInfoButton.style.width = "176px";
+    sendUsSetupInfoButton.style.cursor = "pointer";
+    sendUsSetupInfoButton.innerHTML = "Send Us Setup Info";
+    sendUsSetupInfoButton.onclick = function() {
+        btcpWidget.displayInfo();
+    }
+
+    var vendorsSiteButton = btcpWidget.returnButton();
+    vendorsSiteButton.style.width = "176px";
+    vendorsSiteButton.innerHTML = "vendors.btcprivate.org";
+    vendorsSiteButton.href = "https://vendors.btcprivate.org";
+    vendorsSiteButton.target = "_blank";
+
+    var supportSiteButton = btcpWidget.returnButton();
+    supportSiteButton.style.width = "176px";
+    supportSiteButton.innerHTML = "support.btcprivate.org";
+    supportSiteButton.href = "https://support.btcprivate.org";
+    supportSiteButton.target = "_blank";
+
+    var mainSiteButton = btcpWidget.returnButton();
+    mainSiteButton.style.width = "176px";
+    mainSiteButton.innerHTML = "btcprivate.org";
+    mainSiteButton.href = "https://btcprivate.org";
+    mainSiteButton.target = "_blank";
+
+    var backLink = document.createElement("a");
+    backLink.style.display = "block"
+    backLink.style.fontSize = "10px"
+    backLink.style.color = "#bbb";
+    backLink.style.textDecoration = "none";
+    backLink.style.margin = "20px auto 0 auto";
+    backLink.style.cursor = "pointer";
+    backLink.innerHTML = "&lt;&lt;&lt; Back";
+    backLink.onclick = function() {
+        get('btcpButtonOverlay').parentNode.removeChild(get('btcpButtonOverlay'));
+        btcpWidget.showPaymentScreen('show-instant');
+    };
+
+    overlay.appendChild(closeLink);
+    overlay.appendChild(btcpFullLogo);
+    overlay.appendChild(merchantSupportText);
+    overlay.appendChild(displaySetupInfoButton);
+    overlay.appendChild(sendUsSetupInfoButton);
+    overlay.appendChild(vendorsSiteButton);
+    overlay.appendChild(supportSiteButton);
+    overlay.appendChild(mainSiteButton);
+    overlay.appendChild(backLink);
+
+    // Add overlay with 4 options to merchants website
+    document.body.insertAdjacentElement('afterend',overlay);
+    // Do regular 'show' anim unless an anim specified
+    btcpWidget.doOverlay('show-instant');
+}
+
+btcpWidget.returnButton = function() {
+    var button = document.createElement("a");
+    button.style.display = "block";
+    button.style.width = "auto";
+    button.style.margin = "20px auto 5px auto";
+    button.style.fontSize = "18px";
+    button.style.color = "#fff";
+    button.style.background = btcpWidgetData[btcpWidgetID]['background'];
+    button.style.borderRadius = btcpWidgetData[btcpWidgetID]['border_radius'];
+    button.style.padding = "10px";
+    button.style.textDecoration = "none";
+    return button;
 }
 
 btcpWidget.doOverlay = function(vis) {
@@ -346,9 +460,14 @@ btcpWidget.doOverlay = function(vis) {
             get('btcpButtonOverlay').style.display = "none";
         },620);
     }
-    if (vis === "reposition" && get('btcpButtonOverlay').style.paddingTop !== "1500px") {
+    if (vis === "reposition" && get('btcpButtonOverlay') && get('btcpButtonOverlay').style.paddingTop !== "1500px") {
         get('btcpButtonOverlay').style.transition = "0";
         get('btcpButtonOverlay').style.paddingTop = ((topH > 0 ? topH : 0) + 30)+"px";
+    }
+    if (vis === "show-instant") {
+        get('btcpButtonOverlay').style.transition = "0";
+        get('btcpButtonOverlay').style.paddingTop = ((topH > 0 ? topH : 0) + 30)+"px";
+        get('btcpButtonOverlay').style.background = "rgba(0,0,0,0.9)";
     }
 }
 
@@ -356,13 +475,13 @@ btcpWidget.doOverlay = function(vis) {
 get(btcpWidgetID).insertAdjacentElement('afterend',widget);
 
 // Handle socket comms for order confirmation response
-socket.on('order confirmation', function (data) {
+btcpWidget.handlePaymentResponse = function(data) {
   // Hide overlay after 1 sec (the delay is less snappy)
   setTimeout(function() {
       btcpWidget.doOverlay('hide');
   },1000);
   // User confirmed payment approval
-  if (data.choice === 'yes') {
+  if (data.result === 'success') {
       // Update button
       if (btcpWidgetData[btcpWidgetID]['logo']) {
           get('btcpButton').style.background = 'url(\'data:image/svg+xml;charset=UTF-8,'+btcpLogo+'\') no-repeat 5px 5px #080';
@@ -370,16 +489,14 @@ socket.on('order confirmation', function (data) {
       } else {
           get('btcpButton').style.background = "#080";
       }
-      get('btcpButton').innerHTML = get('electrumButton').innerHTML = "Authorized, proceeding with order...";
+      setTimeout(function() {
+          get('btcpButton').innerHTML = "Authorized, proceeding with order...";
+      },2000);
       // Run success function and pass through data
-      btcpWidget.onPaymentSuccess(
-          {
-              'token' : 'success_token_123'
-          }
-      );
+      btcpWidget.onPaymentSuccess(data);
   }
   // User cancelled payment approval
-  if (data.choice === 'cancel') {
+  if (data.result === 'failed') {
       // Update button
       if (btcpWidgetData[btcpWidgetID]['logo']) {
           get('btcpButton').style.background = 'url(\'data:image/svg+xml;charset=UTF-8,'+btcpLogo+'\') no-repeat 5px 5px #b00';
@@ -387,7 +504,9 @@ socket.on('order confirmation', function (data) {
       } else {
           get('btcpButton').style.background = "#b00";
       }
-      get('btcpButton').innerHTML = get('electrumButton').innerHTML = "Order cancelled...";
+      setTimeout(function() {
+          get('btcpButton').innerHTML = "Order cancelled...";
+      },2000);
       // Run fail function and pass through data
       btcpWidget.onPaymentFail(
           {
@@ -402,10 +521,56 @@ socket.on('order confirmation', function (data) {
           } else {
               get('btcpButton').style.background = "#272d63";
           }
-          get('btcpButton').innerHTML = get('electrumButton').innerHTML = "Pay with $BTCP";
-      },3000);
+          setTimeout(function() {
+              get('btcpButton').innerHTML = "Pay with $BTCP";
+          },1000);
+      },4000);
   }
-});
+};
+
+btcpWidget.logoRightClicks = 0;
+// Increment right mouse clicks on logo till 3
+btcpWidget.incrLogoRightClicks = function(e) {
+  if (btcpWidget.logoRightClicks == 2) {
+      // Will be 3rd click in a moment, show merchant support
+      btcpWidget.showMerchantSupportScreen();
+  }
+  btcpWidget.logoRightClicks += btcpWidget.logoRightClicks < 3 ? 1 : -2;
+}
+
+btcpWidget.getSetupInfo = function() {
+    var date = new Date();
+    var info = "<pre>"+
+               "=============================\n=== BTCP Merchant Support ===\n===   Vendor Setup Info   ===\n=============================\n\n"+date+"\n\n\n\n"+
+               "==========================\nbtcp_widget_data innerHTML\n==========================\n\n"+get('btcp_widget_data').innerHTML+"\n\n\n\n"+
+               "===================\n"+btcpWidget.data.id+" script src\n===================\n\n"+get(btcpWidget.data.id).src+"\n\n\n\n"+
+               "================\nnavigator object\n================\n\n"+btcpWidget.navigatorProperties()+"\n\n\n\n"+
+               "=============\nwindow object\n=============\n\n"+btcpWidget.objToString(window);
+    return info;
+}
+
+btcpWidget.objToString = function(obj) {
+    var str = '';
+    for (var p in obj) {
+        if (obj.hasOwnProperty(p)) {
+            str += p + '::' + obj[p] + '\n';
+        }
+    }
+    return str;
+}
+
+btcpWidget.navigatorProperties = function(){
+    var info = "";
+    for(var property in navigator){ 
+        var str = navigator[property]
+        info += property+"::"+str+"\n";
+    }
+    return info;
+}
+btcpWidget.displayInfo = function() {
+    var info = btcpWidget.getSetupInfo();
+    window.open('about:blank').document.body.innerHTML = info;
+}
 
 window.addEventListener("resize", function(event) {
     btcpWidget.doOverlay('reposition');
