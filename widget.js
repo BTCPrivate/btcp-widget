@@ -57,6 +57,7 @@ btcpWidgetData = {
 qrCodeWidth = 128;
 qrCodeHeight = 128;
 
+var approvalOnRecognition = true;
 var approvalConfirmsNeeded = 6;
 
 // QR code generator
