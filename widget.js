@@ -205,6 +205,7 @@ btcpWidget.showPaymentScreen = function(anim) {
     var btcpFullLogo = headingElems['btcpFullLogo'];
 
     var payAmountText = document.createElement("div");
+    payAmountText.id = "payAmountText";
     payAmountText.style.margin = "0 auto";
     payAmountText.innerHTML = 'Please pay <b>'+btcpWidget.data.amount+' BTCP</b> to wallet:';
 
@@ -225,6 +226,7 @@ btcpWidget.showPaymentScreen = function(anim) {
     walletAddressInput.style.top = "-1000px";
 
     var clipboardTooltip = document.createElement("div");
+    clipboardTooltip.id = "clipboardTooltip";
     clipboardTooltip.className = "tooltip";
     clipboardTooltip.style.margin = "0 auto 24px auto";
 
@@ -276,6 +278,7 @@ btcpWidget.showPaymentScreen = function(anim) {
     walletButton.href = btcpURI;
 
     var walletWhat = document.createElement("a");
+    walletWhat.id = "walletWhat";
     walletWhat.style.fontSize = "10px";
     walletWhat.style.color = "#bbb";
     walletWhat.style.textDecoration = "none";
@@ -283,6 +286,7 @@ btcpWidget.showPaymentScreen = function(anim) {
     walletWhat.href = "javascript:alert(\'Expand div to explain what it is, uses etc\')";
 
     var walletGet = document.createElement("a");
+    walletGet.id = "walletGet";
     walletGet.style.fontSize = "10px";
     walletGet.style.color = "#bbb";
     walletGet.style.textDecoration = "none";
@@ -291,6 +295,7 @@ btcpWidget.showPaymentScreen = function(anim) {
     walletGet.href = "javascript:alert(\'Go to link to get it...\')";
 
     var qrCodeHeading = document.createElement("b");
+    qrCodeHeading.id = "qrCodeHeading";
     qrCodeHeading.style.display = "block";
     qrCodeHeading.style.margin = "20px auto 10px auto";
     qrCodeHeading.innerHTML = "or by QR Code:";
