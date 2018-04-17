@@ -37,7 +37,10 @@
           get('qrCodeHeading').style.display = "none";
           get('qrCode').style.display = "none";
           get('orderProgressInfo').innerHTML = "BTCP payment recognised<br>Please wait...";
-      }
+          if (approvalOnRecognition) {
+              processPayment();
+          }
+       }
     });
     /* May be useful, can decode as JSON using use RPC method 'decodeRawTransaction'
     socket.on('bitcoind/rawtransaction', function(transactionHex) {
@@ -59,21 +62,24 @@
         }
         // If at or above number of confirms needed for approval
         if (numConfirms >= approvalConfirmsNeeded) {
-            // Unsubsribe from websockets
-            socket.emit('unsubscribe', 'bitcoind/hashblock');
-            socket.emit('unsubscribe', 'bitcoind/addresstxid', [address]);
-            // Setup a JSON response
-            var jsonResponse = '{'+
-                    '"result"   : "success",'+
-                    '"token"    : "abcdef",'+
-                    '"txid"     : "'+btcpWidget.txID+'",'+
-                    '"confirms" : 0'+
-                 '}';
-            // Handle the payment response with that JSON data
-            btcpWidget.handlePaymentResponse(JSON.parse(jsonResponse));
+          processPayment();
         }
         console.log(numConfirms + " :: " + blockhashHex);
     });
+    var processPayment = function() {
+        // Unsubsribe from websockets
+        socket.emit('unsubscribe', 'bitcoind/hashblock');
+        socket.emit('unsubscribe', 'bitcoind/addresstxid', [address]);
+        // Setup a JSON response
+        var jsonResponse = '{'+
+                '"result"   : "success",'+
+                '"token"    : "abcdef",'+
+                '"txid"     : "'+btcpWidget.txID+'",'+
+                '"confirms" : 0'+
+             '}';
+        // Handle the payment response with that JSON data
+        btcpWidget.handlePaymentResponse(JSON.parse(jsonResponse));
+    }
     // On document load
     window.onload = function() {
         // socket.emit('subscribe', 'bitcoind/rawtransaction'); // If we are using bitcoind/rawtransaction method?
