@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Matts Pizza Shop</title>
+  <script src="/assets/js/socket.io.js"></script>
+  <base href="/store-demo/" />
+  <script src="http://54.212.206.172:8001/socket.io/socket.io.js"></script>
+  <script src="http://54.212.206.172:8001/store-demo/js/jquery/dist/jquery.js"></script>
+  <script src="http://54.212.206.172:8001/store-demo/js/bitcore-lib-btcp/bitcore-lib-btcp.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="font-family: Arial">
+  <script language="javascript">
+    // Temp values:
+    amount = 0.1;
+    address = 'b16JWz3bXsZzX1ywW1oWszmGPSijff54Uh4';
+    // Load libs:
+    var bitcore = require('bitcore-lib-btcp');
+    var socket = io('http://54.212.206.172:8001');
+    socket.emit('subscribe', 'bitcoind/hashblock');
+    socket.emit('subscribe', 'bitcoind/addresstxid', [address]);
+    // On addresstxid subscription response
+    socket.on('bitcoind/addresstxid', function(data) {
+      // Get and confirm address
+      var bitcoreAddress = bitcore.Address(data.address);
+      if (bitcoreAddress.toString() == address) {
+          // Set transaction ID and update progress info
+          btcpWidget.txID = data.txid;
+          get('payAmountText').style.display = "none";
+          get('walletAddress').style.display = "none";
+          get('walletAddressInput').style.display = "none";
+          get('clipboardTooltip').style.display = "none";
+          get('electrumButton').style.display = "none";
+          get('walletWhat').style.display = "none";
+          get('walletGet').style.display = "none";
+          get('qrCodeHeading').style.display = "none";
+          get('qrCode').style.display = "none";
+          get('orderProgressInfo').innerHTML = "BTCP payment recognised<br>Please wait...";
+      }
+    });
+    /* May be useful, can decode as JSON using use RPC method 'decodeRawTransaction'
+    socket.on('bitcoind/rawtransaction', function(transactionHex) {
+        console.log('RAW TRANSACTION DATA');
+        console.log(transactionHex);
+    }); */
+    // -1 because first hashblock arriving to take it to 0 is the block its created in, and that has no confirmations yet
+    numConfirms = 0; // TODO: Needs to be -1 or 0??!
+    // On receiving hashblock info, get the hex for it
+    socket.on('bitcoind/hashblock', function(blockhashHex) {
+        // Increase number of confirms
+        numConfirms++;
+        // Display relevant message
+        if (numConfirms === 0) {
+            console.log("Transaction created within block");
+            get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Received on block";
+        } else {
+            get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Block "+numConfirms+" of "+approvalConfirmsNeeded;
+        }
+        // If at or above number of confirms needed for approval
+        if (numConfirms >= approvalConfirmsNeeded) {
+            // Unsubsribe from websockets
+            socket.emit('unsubscribe', 'bitcoind/hashblock');
+            socket.emit('unsubscribe', 'bitcoind/addresstxid', [address]);
+            // Setup a JSON response
+            var jsonResponse = '{'+
+                    '"result"   : "success",'+
+                    '"token"    : "abcdef",'+
+                    '"txid"     : "'+btcpWidget.txID+'",'+
+                    '"confirms" : 0'+
+                 '}';
+            // Handle the payment response with that JSON data
+            btcpWidget.handlePaymentResponse(JSON.parse(jsonResponse));
+        }
+        console.log(numConfirms + " :: " + blockhashHex);
+    });
+    // On document load
+    window.onload = function() {
+        // socket.emit('subscribe', 'bitcoind/rawtransaction'); // If we are using bitcoind/rawtransaction method?
+        get("wallet").innerHTML = address;
+    };
+  </script>
+
+<!-- We seem to need to have this on the page and not initiated by JS, maybe clickjacking block? //-->
+<div style="position: fixed; top: -1000px; opacity: 0">
+    <div id="wallet"></div>
+    <button class="copyButton" id="copyButtonId" data-id="@item.Type" data-clipboard-action="copy" data-clipboard-target="div#wallet">Copy!</button>
+</div>
+
+    <img src="/assets/images/pizza.png" style="width: 100%; max-width: 600px"><br><br>
+    <b>Matts's Pepperoni Pizza Shop. A whole pizza, just 0.1 BTCP!</b><br><br>
+    <span style="font-size: 18px; font-weight: bold; color: #b00">Warning: Live transactions, will take real BTCP payment!</span><br><br>
+    <span style="font-size: 18px; font-weight: bold; color: #b00">Will also error when payment on blockchain at 0 confirmations, within 2-3 secs typically</span><br><br>
+    <script id="btcp_widget_data">
+        btcpWidget = {};
+        var jsonData = '{'+
+                '"id"          : "widget_1",'+
+                '"wallet"      : "'+address+'",'+
+                '"amount"      : "'+amount+'",'+
+                '"description" : "Pepperoni_Pizza"'+
+             '}';
+        // Handle the payment response with that JSON data
+        btcpWidget.data = JSON.parse(jsonData);
+
+        btcpWidget.onPaymentSuccess = function(data) {
+//           alert("Payment success! TXID: " + data.txid);
+        };
+
+        btcpWidget.onPaymentFail = function(data) {
+//           alert("Payment failed! Reason: " + data.reason);
+        }
+    </script>
+    <script src="https://mattpass.com/lab/widget.js" id="widget_1"></script>
+</body>
+</html>
