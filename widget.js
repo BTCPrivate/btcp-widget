@@ -3,7 +3,16 @@
 ////////////////////////
 btcpWidget.version = 0.3;
 
-btcpURI = 'bitcoin:'+btcpWidget.data.wallet+'?amount='+btcpWidget.data.amount+'&message=Pepperoni%20Pizza&label=Matts%20Pizza&extra=Size%Large';
+btcpWidget.getLocation = function(href) {
+    var l = document.createElement("a");
+    l.href = href;
+    return l;
+};
+
+btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.wallet)+
+          '?amount='+encodeURI(btcpWidget.data.amount)+
+          '&message='+encodeURI(btcpWidget.data.description)+
+          '&r='+encodeURI(btcpWidget.getLocation(window.location).origin);
 
 // Data - would be obtained from DB of course, this is hardcoded for now
 btcpWidgetData = {
@@ -312,7 +321,7 @@ btcpWidget.showPaymentScreen = function(anim) {
     orderProgressInfo.id = "orderProgressInfo";
     orderProgressInfo.style.display = "block";
     orderProgressInfo.style.marginBottom = "5px";
-    orderProgressInfo.innerHTML = "Order completes after:<br>6 confirmations";
+    orderProgressInfo.innerHTML = "Order completes after:<br>"+(approvalOnRecognition ? "BTCP sent" : approvalConfirmsNeeded+" confirmations");
 
     var helpLink = document.createElement("a");
     helpLink.style.fontSize = "10px"
