@@ -68,7 +68,7 @@ JONS IP: 34.217.70.40
                 console.log("Transaction created within block");
                 get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Received on block";
             } else {
-                get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>"+numConfirms+" of "+approvalConfirmsNeeded+" confirms";
+                get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>"+numConfirms+" of "+approvalConfirmsNeeded+" confirms <a href=\"https://explorer.btcprivate.org/address/"+address+"\" target=\"_blank\" style=\"text-decoration: none; color: #fff\">[&gt;]</a>";
             }
             // If at or above number of confirms needed for approval
             if (numConfirms >= approvalConfirmsNeeded) {
