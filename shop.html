@@ -1,3 +1,7 @@
+<!--
+MY IP: 54.212.206.172
+JONS IP: 34.217.70.40
+//-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,6 +19,7 @@
     // Temp values:
     amount = 0.1;
     address = 'b16JWz3bXsZzX1ywW1oWszmGPSijff54Uh4';
+    paymentRecognised = false;
     // Load libs:
     var bitcore = require('bitcore-lib-btcp');
     var socket = io('http://54.212.206.172:8001');
@@ -25,6 +30,7 @@
       // Get and confirm address
       var bitcoreAddress = bitcore.Address(data.address);
       if (bitcoreAddress.toString() == address) {
+          paymentRecognised = true;
           // Set transaction ID and update progress info
           btcpWidget.txID = data.txid;
           get('payAmountText').style.display = "none";
@@ -36,35 +42,40 @@
           get('walletGet').style.display = "none";
           get('qrCodeHeading').style.display = "none";
           get('qrCode').style.display = "none";
-          get('orderProgressInfo').innerHTML = "BTCP payment recognised<br>Please wait...";
+          get('orderProgressInfo').innerHTML = "BTCP payment recognised<br>Please wait for confirms...";
           if (approvalOnRecognition) {
               processPayment();
           }
        }
     });
     /* May be useful, can decode as JSON using use RPC method 'decodeRawTransaction'
+    Info on that function: https://github.com/BTCPrivate/BitcoinPrivate/blob/8a28216fa9796dffb1bdce0103aaa21476fb66c0/src/rpcrawtransaction.cpp#L188
+    ch4ot1c note: you can decode it with the decoderawtransaction rpc method (do the decoding onthe daemon) with bitcore-lib-btcp / btcprivate-js
     socket.on('bitcoind/rawtransaction', function(transactionHex) {
         console.log('RAW TRANSACTION DATA');
         console.log(transactionHex);
     }); */
     // -1 because first hashblock arriving to take it to 0 is the block its created in, and that has no confirmations yet
+    // Actually, it seems 0 is right?!
     numConfirms = 0; // TODO: Needs to be -1 or 0??!
     // On receiving hashblock info, get the hex for it
     socket.on('bitcoind/hashblock', function(blockhashHex) {
-        // Increase number of confirms
-        numConfirms++;
-        // Display relevant message
-        if (numConfirms === 0) {
-            console.log("Transaction created within block");
-            get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Received on block";
-        } else {
-            get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Block "+numConfirms+" of "+approvalConfirmsNeeded;
+        if (paymentRecognised) {
+            // Increase number of confirms
+            numConfirms++;
+            // Display relevant message
+            if (numConfirms === 0) {
+                console.log("Transaction created within block");
+                get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Received on block";
+            } else {
+                get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>"+numConfirms+" of "+approvalConfirmsNeeded+" confirms";
+            }
+            // If at or above number of confirms needed for approval
+            if (numConfirms >= approvalConfirmsNeeded) {
+              processPayment();
+            }
+            console.log(numConfirms + " :: " + blockhashHex);
         }
-        // If at or above number of confirms needed for approval
-        if (numConfirms >= approvalConfirmsNeeded) {
-          processPayment();
-        }
-        console.log(numConfirms + " :: " + blockhashHex);
     });
     var processPayment = function() {
         // Unsubsribe from websockets
@@ -75,7 +86,7 @@
                 '"result"   : "success",'+
                 '"token"    : "abcdef",'+
                 '"txid"     : "'+btcpWidget.txID+'",'+
-                '"confirms" : 0'+
+                '"confirms" : '+numConfirms+
              '}';
         // Handle the payment response with that JSON data
         btcpWidget.handlePaymentResponse(JSON.parse(jsonResponse));
@@ -96,14 +107,13 @@
     <img src="/assets/images/pizza.png" style="width: 100%; max-width: 600px"><br><br>
     <b>Matts's Pepperoni Pizza Shop. A whole pizza, just 0.1 BTCP!</b><br><br>
     <span style="font-size: 18px; font-weight: bold; color: #b00">Warning: Live transactions, will take real BTCP payment!</span><br><br>
-    <span style="font-size: 18px; font-weight: bold; color: #b00">Will also error when payment on blockchain at 0 confirmations, within 2-3 secs typically</span><br><br>
     <script id="btcp_widget_data">
         btcpWidget = {};
         var jsonData = '{'+
                 '"id"          : "widget_1",'+
                 '"wallet"      : "'+address+'",'+
                 '"amount"      : "'+amount+'",'+
-                '"description" : "Pepperoni_Pizza"'+
+                '"description" : "Pepperoni Pizza"'+
              '}';
         // Handle the payment response with that JSON data
         btcpWidget.data = JSON.parse(jsonData);
