@@ -66,7 +66,7 @@ btcpWidgetData = {
 qrCodeWidth = 128;
 qrCodeHeight = 128;
 
-var approvalOnRecognition = true;
+var approvalOnRecognition = false;
 var approvalConfirmsNeeded = 6;
 
 // QR code generator
@@ -367,7 +367,7 @@ btcpWidget.showMerchantSupportScreen = function(anim) {
 
     var merchantSupportText = document.createElement("div");
     merchantSupportText.style.margin = "0 auto";
-    merchantSupportText.innerHTML = 'Merchant Support';
+    merchantSupportText.innerHTML = 'Merchant Support<br><br>Widget Version v'+btcpWidget.version;
 
     var displaySetupInfoButton = btcpWidget.returnButton();
     displaySetupInfoButton.style.width = "176px";
@@ -556,7 +556,7 @@ btcpWidget.incrLogoRightClicks = function(e) {
 btcpWidget.getSetupInfo = function() {
     var date = new Date();
     var info = "<pre>"+
-               "=============================\n=== BTCP Merchant Support ===\n===   Vendor Setup Info   ===\n=============================\n\n"+date+"\n\n\n\n"+
+               "=============================\n=== BTCP Merchant Support ===\n===  Widget version v"+btcpWidget.version+"  ===\n===   Vendor Setup Info   ===\n=============================\n\n"+date+"\n\n\n\n"+
                "==========================\nbtcp_widget_data innerHTML\n==========================\n\n"+get('btcp_widget_data').innerHTML+"\n\n\n\n"+
                "===================\n"+btcpWidget.data.id+" script src\n===================\n\n"+get(btcpWidget.data.id).src+"\n\n\n\n"+
                "================\nnavigator object\n================\n\n"+btcpWidget.navigatorProperties()+"\n\n\n\n"+
