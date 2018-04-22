@@ -18,7 +18,7 @@ JONS IP: 34.217.70.40
   <script language="javascript">
     // Temp values:
     amount = 0.1;
-    address = 'b16JWz3bXsZzX1ywW1oWszmGPSijff54Uh4';
+    address = 'b1LUS3h2oeDUvcPwG5Vpt5EegPZm4W3RGar';
     paymentRecognised = false;
     // Load libs:
     var bitcore = require('bitcore-lib-btcp');
@@ -48,16 +48,30 @@ JONS IP: 34.217.70.40
           }
        }
     });
-    /* May be useful, can decode as JSON using use RPC method 'decodeRawTransaction'
-    Info on that function: https://github.com/BTCPrivate/BitcoinPrivate/blob/8a28216fa9796dffb1bdce0103aaa21476fb66c0/src/rpcrawtransaction.cpp#L188
-    ch4ot1c note: you can decode it with the decoderawtransaction rpc method (do the decoding onthe daemon) with bitcore-lib-btcp / btcprivate-js
+    // May be useful, can decode as JSON using use RPC method 'decodeRawTransaction'
+    // Info on that function: https://github.com/BTCPrivate/BitcoinPrivate/blob/8a28216fa9796dffb1bdce0103aaa21476fb66c0/src/rpcrawtransaction.cpp#L188
+    // ch4ot1c note: you can decode it with the decoderawtransaction rpc method (do the decoding on the daemon) with bitcore-lib-btcp / btcprivate-js
     socket.on('bitcoind/rawtransaction', function(transactionHex) {
-        console.log('RAW TRANSACTION DATA');
-        console.log(transactionHex);
-    }); */
-    // -1 because first hashblock arriving to take it to 0 is the block its created in, and that has no confirmations yet
-    // Actually, it seems 0 is right?!
-    numConfirms = 0; // TODO: Needs to be -1 or 0??!
+        // Get outputs from tx hex
+        var o = bitcore.Transaction(transactionHex).outputs;
+        // Cycle through and find our address in that tx block
+        for (var i=0; i<o.length; i++) {
+            if (bitcore.Address.fromScript(bitcore.Script.fromBuffer(o[i]._scriptBuffer)).toString() == address) {
+                // Check user has paid correct amount
+                // TODO: if not enough paid, display messaging that user needs to pay more
+                // TODO: if too much paid, display message?
+                // TODO: Allow up to 5000 sat variance +/-
+                console.log(address + " FOUND");
+                console.log(o);
+                console.log(o[i]);
+                console.log(o[i].satoshis + " VS " + (amount * 100000000));
+                if (o[i].satoshis < amount * 100000000) {alert('NOT ENOUGH PAID!');}
+                if (o[i].satoshis === amount * 100000000) {}
+                if (o[i].satoshis > amount * 100000000) {alert('TOO MUCH PAID!');}
+            }
+        }
+    });
+    numConfirms = 0;
     // On receiving hashblock info, get the hex for it
     socket.on('bitcoind/hashblock', function(blockhashHex) {
         if (paymentRecognised) {
@@ -81,6 +95,7 @@ JONS IP: 34.217.70.40
         // Unsubsribe from websockets
         socket.emit('unsubscribe', 'bitcoind/hashblock');
         socket.emit('unsubscribe', 'bitcoind/addresstxid', [address]);
+
         // Setup a JSON response
         var jsonResponse = '{'+
                 '"result"   : "success",'+
@@ -93,9 +108,9 @@ JONS IP: 34.217.70.40
     }
     // On document load
     window.onload = function() {
-        // socket.emit('subscribe', 'bitcoind/rawtransaction'); // If we are using bitcoind/rawtransaction method?
         get("wallet").innerHTML = address;
     };
+    socket.emit('subscribe', 'bitcoind/rawtransaction');
   </script>
 
 <!-- We seem to need to have this on the page and not initiated by JS, maybe clickjacking block? //-->
