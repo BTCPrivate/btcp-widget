@@ -1,7 +1,7 @@
 ////////////////////////
-// BTCP Widget - v0.3 //
+// BTCP Widget - v0.4 //
 ////////////////////////
-btcpWidget.version = 0.3;
+btcpWidget.version = 0.4;
 
 btcpWidget.getLocation = function(href) {
     var l = document.createElement("a");
