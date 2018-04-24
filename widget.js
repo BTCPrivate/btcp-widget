@@ -185,7 +185,7 @@ btcpWidget.returnScreenHeading = function() {
     closeLink.style.fontSize = "24px";
     closeLink.style.color = "#555";
     closeLink.style.cursor = "pointer";
-    closeLink.onclick = function(){btcpWidget.doOverlay('hide');};
+    closeLink.onclick = function(){paymentRecognised ? alert("Payment in progress, please wait") : btcpWidget.doOverlay('hide');};
     closeLink.onmouseover = function(){this.style.color = '#ddd'};
     closeLink.onmouseout = function(){this.style.color = '#555'};
     closeLink.innerHTML = "x";
@@ -317,6 +317,15 @@ btcpWidget.showPaymentScreen = function(anim) {
     qrCodeElem.style.padding = "10px";
     qrCodeElem.style.background = "#fff";
 
+    var orderProgressBarContainer = document.createElement("div");
+    orderProgressBarContainer.id = "orderProgressBarContainer";
+    orderProgressBarContainer.style.display = "none";
+    orderProgressBarContainer.style.width = "200px";
+    orderProgressBarContainer.style.margin = "5px auto 20px auto";
+    orderProgressBarContainer.style.textAlign = "left";
+    orderProgressBarContainer.style.background = "#888";
+    orderProgressBarContainer.innerHTML = '<div id="orderProgressBar" style="display: inline-block; width: 0; background: #272d63; transition: all 0.5s ease-in-out">&nbsp;</div>';
+
     var orderProgressInfo = document.createElement("b");
     orderProgressInfo.id = "orderProgressInfo";
     orderProgressInfo.style.display = "block";
@@ -346,6 +355,7 @@ btcpWidget.showPaymentScreen = function(anim) {
     overlay.appendChild(walletGet);
     overlay.appendChild(qrCodeHeading);
     overlay.appendChild(qrCodeElem);
+    overlay.appendChild(orderProgressBarContainer);
     overlay.appendChild(orderProgressInfo);
     overlay.appendChild(helpLink);
 
@@ -374,14 +384,6 @@ btcpWidget.showMerchantSupportScreen = function(anim) {
     displaySetupInfoButton.style.cursor = "pointer";
     displaySetupInfoButton.innerHTML = "Display Setup Info";
     displaySetupInfoButton.onclick = function() {
-        btcpWidget.displayInfo();
-    }
-
-    var sendUsSetupInfoButton = btcpWidget.returnButton();
-    sendUsSetupInfoButton.style.width = "176px";
-    sendUsSetupInfoButton.style.cursor = "pointer";
-    sendUsSetupInfoButton.innerHTML = "Send Us Setup Info";
-    sendUsSetupInfoButton.onclick = function() {
         btcpWidget.displayInfo();
     }
 
@@ -420,7 +422,6 @@ btcpWidget.showMerchantSupportScreen = function(anim) {
     overlay.appendChild(btcpFullLogo);
     overlay.appendChild(merchantSupportText);
     overlay.appendChild(displaySetupInfoButton);
-    overlay.appendChild(sendUsSetupInfoButton);
     overlay.appendChild(vendorsSiteButton);
     overlay.appendChild(supportSiteButton);
     overlay.appendChild(mainSiteButton);
