@@ -18,7 +18,7 @@ JONS IP: 34.217.70.40
   <script language="javascript">
     // Temp values:
     amount = 0.1;
-    address = 'b1LUS3h2oeDUvcPwG5Vpt5EegPZm4W3RGar';
+    address = 'b1ARYYYjm3X4BKcoUmwzDGzuDVKAg3Rhn3A';
     paymentRecognised = false;
     // Load libs:
     var bitcore = require('bitcore-lib-btcp');
@@ -42,7 +42,11 @@ JONS IP: 34.217.70.40
           get('walletGet').style.display = "none";
           get('qrCodeHeading').style.display = "none";
           get('qrCode').style.display = "none";
+          get('orderProgressBarContainer').style.display = "block";
           get('orderProgressInfo').innerHTML = "BTCP payment recognised<br>Please wait for confirms...";
+          setTimeout(function() {
+              get('orderProgressBar').style.width = ((1/(approvalConfirmsNeeded+1))*200) + "px";
+          },200);
           if (approvalOnRecognition) {
               processPayment();
           }
@@ -83,6 +87,7 @@ JONS IP: 34.217.70.40
                 get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Received on block";
             } else {
                 get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>"+numConfirms+" of "+approvalConfirmsNeeded+" confirms <a href=\"https://explorer.btcprivate.org/address/"+address+"\" target=\"_blank\" style=\"text-decoration: none; color: #fff\">[&gt;]</a>";
+                get('orderProgressBar').style.width = (((numConfirms+1)/(approvalConfirmsNeeded+1))*200) + "px";
             }
             // If at or above number of confirms needed for approval
             if (numConfirms >= approvalConfirmsNeeded) {
