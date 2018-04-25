@@ -3,6 +3,10 @@
 ////////////////////////
 btcpWidget.version = 0.4;
 
+// Get hex string of UTC timestamp in ms as transaction ref
+// TODO: add merchant ref to this also, may need more uniqueness
+btcpWidget.transactionRef = Date.now().toString(16);
+
 btcpWidget.getLocation = function(href) {
     var l = document.createElement("a");
     l.href = href;
@@ -317,6 +321,13 @@ btcpWidget.showPaymentScreen = function(anim) {
     qrCodeElem.style.padding = "10px";
     qrCodeElem.style.background = "#fff";
 
+    var transactionRef = document.createElement("div");
+    transactionRef.id = "transactionRef";
+    transactionRef.style.display = "none";
+    transactionRef.style.width = "200px";
+    transactionRef.style.margin = "5px auto 20px auto";
+    transactionRef.innerHTML = "Transaction ref: "+btcpWidget.transactionRef;
+
     var orderProgressBarContainer = document.createElement("div");
     orderProgressBarContainer.id = "orderProgressBarContainer";
     orderProgressBarContainer.style.display = "none";
@@ -355,6 +366,7 @@ btcpWidget.showPaymentScreen = function(anim) {
     overlay.appendChild(walletGet);
     overlay.appendChild(qrCodeHeading);
     overlay.appendChild(qrCodeElem);
+    overlay.appendChild(transactionRef);
     overlay.appendChild(orderProgressBarContainer);
     overlay.appendChild(orderProgressInfo);
     overlay.appendChild(helpLink);
