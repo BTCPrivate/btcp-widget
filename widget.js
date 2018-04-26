@@ -198,7 +198,7 @@ btcpWidget.returnScreenHeading = function() {
     closeLink.style.fontSize = "24px";
     closeLink.style.color = "#555";
     closeLink.style.cursor = "pointer";
-    closeLink.onclick = function(){paymentRecognised ? alert("Payment in progress, please wait") : btcpWidget.doOverlay('hide');};
+    closeLink.onclick = function(){paidEnough ? alert("Payment in progress, please wait") : btcpWidget.doOverlay('hide');};
     closeLink.onmouseover = function(){this.style.color = '#ddd'};
     closeLink.onmouseout = function(){this.style.color = '#555'};
     closeLink.innerHTML = "x";
