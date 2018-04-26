@@ -621,6 +621,7 @@ var bitcore = require('bitcore-lib-btcp');
 var socket = io('http://54.212.206.172:8001');
 socket.emit('subscribe', 'bitcoind/hashblock');
 socket.emit('subscribe', 'bitcoind/addresstxid', [address]);
+socket.emit('subscribe', 'bitcoind/rawtransaction');
 
 const processPayment = function() {
     // Unsubsribe from websockets
@@ -750,4 +751,3 @@ var displayProcessingMessage = function() {
 window.onload = function() {
     get("wallet").innerHTML = address;
 };
-socket.emit('subscribe', 'bitcoind/rawtransaction');
