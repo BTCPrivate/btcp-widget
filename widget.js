@@ -1,10 +1,19 @@
 ////////////////////////
-// BTCP Widget - v0.4 //
+// BTCP Widget - v0.5 //
 ////////////////////////
-btcpWidget.version = 0.4;
+btcpWidget.version = 0.5;
+
+var jsonData = '{'+
+        '"id"          : "widget_1",'+
+        '"wallet"      : "'+address+'",'+
+        '"amount"      : "'+amount+'",'+
+        '"description" : "Pepperoni Pizza"'+
+     '}';
+// Handle the payment response with that JSON data
+btcpWidget.data = JSON.parse(jsonData);
 
 // Get hex string of UTC timestamp in ms as transaction ref
-// TODO: add merchant ref to this also, may need more uniqueness
+// TODO: needs more uniqueness. Also create at point payment received not on this JS script load
 btcpWidget.transactionRef = Date.now().toString(16);
 
 btcpWidget.getLocation = function(href) {
@@ -603,3 +612,142 @@ btcpWidget.displayInfo = function() {
 window.addEventListener("resize", function(event) {
     btcpWidget.doOverlay('reposition');
 });
+
+const explorerLink = '<a href="https://explorer.btcprivate.org/address/'+address+'" target="_blank" style="text-decoration: none; color: #fff">[&gt;]</a>';
+paidEnough = false;
+numConfirms = 0;
+// Load libs:
+var bitcore = require('bitcore-lib-btcp');
+var socket = io('http://54.212.206.172:8001');
+socket.emit('subscribe', 'bitcoind/hashblock');
+socket.emit('subscribe', 'bitcoind/addresstxid', [address]);
+
+const processPayment = function() {
+    // Unsubsribe from websockets
+    socket.emit('unsubscribe', 'bitcoind/hashblock');
+    socket.emit('unsubscribe', 'bitcoind/addresstxid', [address]);
+
+    // Setup a JSON response
+    var jsonResponse = '{'+
+            '"result"   : "success",'+
+            '"token"    : "abcdef",'+
+            '"txid"     : "'+btcpWidget.txID+'",'+
+            '"confirms" : '+numConfirms+
+         '}';
+    // Handle the payment response with that JSON data
+    btcpWidget.handlePaymentResponse(JSON.parse(jsonResponse));
+}
+
+// On addresstxid subscription response
+socket.on('bitcoind/addresstxid', function(data) {
+  // Get and confirm address
+  var bitcoreAddress = bitcore.Address(data.address);
+  if (bitcoreAddress.toString() == address && paidEnough) {
+      // Set transaction ID and update progress info
+      btcpWidget.txID = data.txid;
+      displayProcessingMessage();
+   }
+});
+// May be useful, can decode as JSON using use RPC method 'decodeRawTransaction'
+// Info on that function: https://github.com/BTCPrivate/BitcoinPrivate/blob/8a28216fa9796dffb1bdce0103aaa21476fb66c0/src/rpcrawtransaction.cpp#L188
+// ch4ot1c note: you can decode it with the decoderawtransaction rpc method (do the decoding on the daemon) with bitcore-lib-btcp / btcprivate-js
+socket.on('bitcoind/rawtransaction', function(transactionHex) {
+    if ("undefined" == typeof amountToPay) {
+        amountToPay = amount;
+        console.log("SET amountToPay to "+amountToPay);
+    }
+    // Get outputs from tx hex
+    var o = bitcore.Transaction(transactionHex).outputs;
+    // Cycle through and find our address in that tx block
+    for (var i=0; i<o.length; i++) {
+        if (bitcore.Address.fromScript(bitcore.Script.fromBuffer(o[i]._scriptBuffer)).toString() == address) {
+            // Check user has paid correct amount
+            // TODO: if not enough paid, display messaging that user needs to pay more
+            console.log(address + " FOUND");
+            console.log(o);
+            console.log(o[i]);
+            console.log(o[i].satoshis + " VS " + (amountToPay * 100000000));
+            // Paid too little (5000 sats or less under required amount)
+            if (o[i].satoshis < amountToPay * (100000000 - 5000)) {
+                // Set amount to pay and alert user
+                amountToPay = (amountToPay - (o[i].satoshis / 100000000)).toFixed(8) * 1;
+                alert('You seem to have paid '+amountToPay+' BTCP too little.\n\nPlease pay this extra amount to continue.');
+                // Set params back to start point and new message
+                paidEnough = false;
+                numConfirms = 0;
+                get('orderProgressInfo').innerHTML = "Please pay remaining:<br>"+amountToPay+" BTCP to continue ";
+                get('payAmountText').innerHTML = 'Please pay <b>'+amountToPay+' BTCP</b> to wallet:'
+                // Set new URI
+                btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.wallet)+
+                    '?amount='+amountToPay+
+                    '&message='+encodeURI(btcpWidget.data.description)+
+                    '&r='+encodeURI(btcpWidget.getLocation(window.location).origin);
+                // Apply that to button and QR code
+                get('electrumButton').href = btcpURI;
+                $('#qrCode')[0].innerHTML = "";
+                $('#qrCode').qrcode(btcpURI);
+            // Paid too much (5000 sats or more under required amount)
+            } else if (o[i].satoshis > amountToPay * (100000000 + 5000)) {
+                // Set amount overpaid and alert user
+                amountToPay = ((o[i].satoshis / 100000000) - amountToPay).toFixed(8) * 1;
+                alert('You seem to have paid '+amountToPay+' BTCP too much.\n\nPlease contact merchant to discuss any partial refund.');
+                // Permit order to proceed
+                paidEnough = true;
+                displayProcessingMessage();
+            // Paid roughly right amount
+            } else {
+                paidEnough = true;
+                displayProcessingMessage();
+            }
+            break;
+        }
+    }
+});
+
+// On receiving hashblock info, get the hex for it
+socket.on('bitcoind/hashblock', function(blockhashHex) {
+    if (paidEnough) {
+        // Increase number of confirms
+        numConfirms++;
+        // Display relevant message
+        if (numConfirms === 0) {
+            console.log("Transaction created within block");
+            get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Received on block "+explorerLink;
+        } else {
+            get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>"+numConfirms+" of "+approvalConfirmsNeeded+" confirms "+explorerLink;
+            get('orderProgressBar').style.width = (((numConfirms+1)/(approvalConfirmsNeeded+1))*200) + "px";
+        }
+        // If at or above number of confirms needed for approval
+        if (numConfirms >= approvalConfirmsNeeded) {
+          processPayment();
+        }
+        console.log(numConfirms + " :: " + blockhashHex);
+    }
+});
+
+var displayProcessingMessage = function() {
+    get('payAmountText').style.display = "none";
+    get('walletAddress').style.display = "none";
+    get('walletAddressInput').style.display = "none";
+    get('clipboardTooltip').style.display = "none";
+    get('electrumButton').style.display = "none";
+    get('walletWhat').style.display = "none";
+    get('walletGet').style.display = "none";
+    get('qrCodeHeading').style.display = "none";
+    get('qrCode').style.display = "none";
+    get('transactionRef').style.display = "block";
+    get('orderProgressBarContainer').style.display = "block";
+    get('orderProgressInfo').innerHTML = "BTCP payment recognised<br>Please wait for confirms... "+explorerLink;
+    setTimeout(function() {
+        get('orderProgressBar').style.width = ((1/(approvalConfirmsNeeded+1))*200) + "px";
+    },200);
+    if (approvalOnRecognition) {
+        processPayment();
+    }
+}
+
+// On document load
+window.onload = function() {
+    get("wallet").innerHTML = address;
+};
+socket.emit('subscribe', 'bitcoind/rawtransaction');
