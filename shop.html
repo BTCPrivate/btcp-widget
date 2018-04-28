@@ -13,8 +13,9 @@
 
     <script id="btcp_widget_data">
         var btcpWidget = {};
-        const amount = 0.1;
-        const address = 'b1BpgPewXjPLLSVh8Rh2gAJniAfp7PgXjKg';
+        const address     = 'b1BpgPewXjPLLSVh8Rh2gAJniAfp7PgXjKg';
+        const amount      = 0.1;
+        const description = 'Pepperoni Pizza';
 
         btcpWidget.onPaymentSuccess = function(data) {
           alert("Payment success! TXID: " + data.txid);
