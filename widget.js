@@ -1,14 +1,14 @@
 ////////////////////////
-// BTCP Widget - v0.5 //
+// BTCP Widget - v0.6 //
 ////////////////////////
-btcpWidget.version = 0.5;
+btcpWidget.version = 0.6;
 
-// btcpWidget.scriptHost = "widget.btcprivate.org:8001"; // FUTURE
-btcpWidget.scriptHost = "widget.btcprivate.co:8001"; // SHORT TERM
+// btcpWidget.scriptHost = "widget.btcprivate.org:8001"; // PRODUCTION
+btcpWidget.scriptHost = "widget.btcprivate.co:8001"; // BETA
 
 // Handle the payment response with that JSON data
 btcpWidget.data = JSON.parse('{'+
-        '"id"          : "widget_1",'+
+        '"id"          : "btcp_widget",'+
         '"wallet"      : "'+address+'",'+
         '"amount"      : "'+amount+'",'+
         '"description" : "Pepperoni Pizza"'+
@@ -27,7 +27,7 @@ btcpWidgetData = {
         'background' : '#272d63',
         'logo' : true
     },
-    'widget_1' : {
+    'btcp_widget' : {
         'name' : 'Supercart checkout button',
         'type' : 'Buy',
         'width' : 'auto',
