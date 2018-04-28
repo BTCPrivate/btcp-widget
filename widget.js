@@ -3,6 +3,9 @@
 ////////////////////////
 btcpWidget.version = 0.5;
 
+// btcpWidget.scriptHost = "widget.btcprivate.org:8001"; // FUTURE
+btcpWidget.scriptHost = "widget.btcprivate.co:8001"; // SHORT TERM
+
 // Handle the payment response with that JSON data
 btcpWidget.data = JSON.parse('{'+
         '"id"          : "widget_1",'+
@@ -10,21 +13,6 @@ btcpWidget.data = JSON.parse('{'+
         '"amount"      : "'+amount+'",'+
         '"description" : "Pepperoni Pizza"'+
      '}');
-
-// Get hex string of UTC timestamp in ms as transaction ref
-// TODO: needs more uniqueness. Also create at point payment received not on this JS script load
-btcpWidget.transactionRef = Date.now().toString(16);
-
-btcpWidget.getLocation = function(href) {
-    var l = document.createElement("a");
-    l.href = href;
-    return l;
-};
-
-btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.wallet)+
-          '?amount='+encodeURI(btcpWidget.data.amount)+
-          '&message='+encodeURI(btcpWidget.data.description)+
-          '&r='+encodeURI(btcpWidget.getLocation(window.location).origin);
 
 // Data - would be obtained from DB of course, this is hardcoded for now
 btcpWidgetData = {
@@ -74,42 +62,60 @@ btcpWidgetData = {
     }
 }
 
-// QR code size
-qrCodeWidth = 128;
-qrCodeHeight = 128;
+// Get hex string of UTC timestamp in ms as transaction ref
+// TODO: needs more uniqueness. Also create at point payment received not on this JS script load
+btcpWidget.transactionRef = Date.now().toString(16);
+
+btcpWidget.getLocation = function(href) {
+    var l = document.createElement("a");
+    l.href = href;
+    return l;
+};
+
+btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.wallet)+
+          '?amount='+encodeURI(btcpWidget.data.amount)+
+          '&message='+encodeURI(btcpWidget.data.description)+
+          '&r='+encodeURI(btcpWidget.getLocation(window.location).origin);
 
 var approvalOnRecognition = false;
 var approvalConfirmsNeeded = 6;
 
-// QR code generator
-(function(r){r.fn.qrcode=function(h){var s;function u(a){this.mode=s;this.data=a}function o(a,c){this.typeNumber=a;this.errorCorrectLevel=c;this.modules=null;this.moduleCount=0;this.dataCache=null;this.dataList=[]}function q(a,c){if(void 0==a.length)throw Error(a.length+"/"+c);for(var d=0;d<a.length&&0==a[d];)d++;this.num=Array(a.length-d+c);for(var b=0;b<a.length-d;b++)this.num[b]=a[b+d]}function p(a,c){this.totalCount=a;this.dataCount=c}function t(){this.buffer=[];this.length=0}u.prototype={getLength:function(){return this.data.length},
-write:function(a){for(var c=0;c<this.data.length;c++)a.put(this.data.charCodeAt(c),8)}};o.prototype={addData:function(a){this.dataList.push(new u(a));this.dataCache=null},isDark:function(a,c){if(0>a||this.moduleCount<=a||0>c||this.moduleCount<=c)throw Error(a+","+c);return this.modules[a][c]},getModuleCount:function(){return this.moduleCount},make:function(){if(1>this.typeNumber){for(var a=1,a=1;40>a;a++){for(var c=p.getRSBlocks(a,this.errorCorrectLevel),d=new t,b=0,e=0;e<c.length;e++)b+=c[e].dataCount;
-for(e=0;e<this.dataList.length;e++)c=this.dataList[e],d.put(c.mode,4),d.put(c.getLength(),j.getLengthInBits(c.mode,a)),c.write(d);if(d.getLengthInBits()<=8*b)break}this.typeNumber=a}this.makeImpl(!1,this.getBestMaskPattern())},makeImpl:function(a,c){this.moduleCount=4*this.typeNumber+17;this.modules=Array(this.moduleCount);for(var d=0;d<this.moduleCount;d++){this.modules[d]=Array(this.moduleCount);for(var b=0;b<this.moduleCount;b++)this.modules[d][b]=null}this.setupPositionProbePattern(0,0);this.setupPositionProbePattern(this.moduleCount-
-7,0);this.setupPositionProbePattern(0,this.moduleCount-7);this.setupPositionAdjustPattern();this.setupTimingPattern();this.setupTypeInfo(a,c);7<=this.typeNumber&&this.setupTypeNumber(a);null==this.dataCache&&(this.dataCache=o.createData(this.typeNumber,this.errorCorrectLevel,this.dataList));this.mapData(this.dataCache,c)},setupPositionProbePattern:function(a,c){for(var d=-1;7>=d;d++)if(!(-1>=a+d||this.moduleCount<=a+d))for(var b=-1;7>=b;b++)-1>=c+b||this.moduleCount<=c+b||(this.modules[a+d][c+b]=
-0<=d&&6>=d&&(0==b||6==b)||0<=b&&6>=b&&(0==d||6==d)||2<=d&&4>=d&&2<=b&&4>=b?!0:!1)},getBestMaskPattern:function(){for(var a=0,c=0,d=0;8>d;d++){this.makeImpl(!0,d);var b=j.getLostPoint(this);if(0==d||a>b)a=b,c=d}return c},createMovieClip:function(a,c,d){a=a.createEmptyMovieClip(c,d);this.make();for(c=0;c<this.modules.length;c++)for(var d=1*c,b=0;b<this.modules[c].length;b++){var e=1*b;this.modules[c][b]&&(a.beginFill(0,100),a.moveTo(e,d),a.lineTo(e+1,d),a.lineTo(e+1,d+1),a.lineTo(e,d+1),a.endFill())}return a},
-setupTimingPattern:function(){for(var a=8;a<this.moduleCount-8;a++)null==this.modules[a][6]&&(this.modules[a][6]=0==a%2);for(a=8;a<this.moduleCount-8;a++)null==this.modules[6][a]&&(this.modules[6][a]=0==a%2)},setupPositionAdjustPattern:function(){for(var a=j.getPatternPosition(this.typeNumber),c=0;c<a.length;c++)for(var d=0;d<a.length;d++){var b=a[c],e=a[d];if(null==this.modules[b][e])for(var f=-2;2>=f;f++)for(var i=-2;2>=i;i++)this.modules[b+f][e+i]=-2==f||2==f||-2==i||2==i||0==f&&0==i?!0:!1}},setupTypeNumber:function(a){for(var c=
-j.getBCHTypeNumber(this.typeNumber),d=0;18>d;d++){var b=!a&&1==(c>>d&1);this.modules[Math.floor(d/3)][d%3+this.moduleCount-8-3]=b}for(d=0;18>d;d++)b=!a&&1==(c>>d&1),this.modules[d%3+this.moduleCount-8-3][Math.floor(d/3)]=b},setupTypeInfo:function(a,c){for(var d=j.getBCHTypeInfo(this.errorCorrectLevel<<3|c),b=0;15>b;b++){var e=!a&&1==(d>>b&1);6>b?this.modules[b][8]=e:8>b?this.modules[b+1][8]=e:this.modules[this.moduleCount-15+b][8]=e}for(b=0;15>b;b++)e=!a&&1==(d>>b&1),8>b?this.modules[8][this.moduleCount-
-b-1]=e:9>b?this.modules[8][15-b-1+1]=e:this.modules[8][15-b-1]=e;this.modules[this.moduleCount-8][8]=!a},mapData:function(a,c){for(var d=-1,b=this.moduleCount-1,e=7,f=0,i=this.moduleCount-1;0<i;i-=2)for(6==i&&i--;;){for(var g=0;2>g;g++)if(null==this.modules[b][i-g]){var n=!1;f<a.length&&(n=1==(a[f]>>>e&1));j.getMask(c,b,i-g)&&(n=!n);this.modules[b][i-g]=n;e--; -1==e&&(f++,e=7)}b+=d;if(0>b||this.moduleCount<=b){b-=d;d=-d;break}}}};o.PAD0=236;o.PAD1=17;o.createData=function(a,c,d){for(var c=p.getRSBlocks(a,
-c),b=new t,e=0;e<d.length;e++){var f=d[e];b.put(f.mode,4);b.put(f.getLength(),j.getLengthInBits(f.mode,a));f.write(b)}for(e=a=0;e<c.length;e++)a+=c[e].dataCount;if(b.getLengthInBits()>8*a)throw Error("code length overflow. ("+b.getLengthInBits()+">"+8*a+")");for(b.getLengthInBits()+4<=8*a&&b.put(0,4);0!=b.getLengthInBits()%8;)b.putBit(!1);for(;!(b.getLengthInBits()>=8*a);){b.put(o.PAD0,8);if(b.getLengthInBits()>=8*a)break;b.put(o.PAD1,8)}return o.createBytes(b,c)};o.createBytes=function(a,c){for(var d=
-0,b=0,e=0,f=Array(c.length),i=Array(c.length),g=0;g<c.length;g++){var n=c[g].dataCount,h=c[g].totalCount-n,b=Math.max(b,n),e=Math.max(e,h);f[g]=Array(n);for(var k=0;k<f[g].length;k++)f[g][k]=255&a.buffer[k+d];d+=n;k=j.getErrorCorrectPolynomial(h);n=(new q(f[g],k.getLength()-1)).mod(k);i[g]=Array(k.getLength()-1);for(k=0;k<i[g].length;k++)h=k+n.getLength()-i[g].length,i[g][k]=0<=h?n.get(h):0}for(k=g=0;k<c.length;k++)g+=c[k].totalCount;d=Array(g);for(k=n=0;k<b;k++)for(g=0;g<c.length;g++)k<f[g].length&&
-(d[n++]=f[g][k]);for(k=0;k<e;k++)for(g=0;g<c.length;g++)k<i[g].length&&(d[n++]=i[g][k]);return d};s=4;for(var j={PATTERN_POSITION_TABLE:[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,84,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,
-78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],G15:1335,G18:7973,G15_MASK:21522,getBCHTypeInfo:function(a){for(var c=a<<10;0<=j.getBCHDigit(c)-j.getBCHDigit(j.G15);)c^=j.G15<<j.getBCHDigit(c)-j.getBCHDigit(j.G15);return(a<<10|c)^j.G15_MASK},getBCHTypeNumber:function(a){for(var c=a<<12;0<=j.getBCHDigit(c)-
-j.getBCHDigit(j.G18);)c^=j.G18<<j.getBCHDigit(c)-j.getBCHDigit(j.G18);return a<<12|c},getBCHDigit:function(a){for(var c=0;0!=a;)c++,a>>>=1;return c},getPatternPosition:function(a){return j.PATTERN_POSITION_TABLE[a-1]},getMask:function(a,c,d){switch(a){case 0:return 0==(c+d)%2;case 1:return 0==c%2;case 2:return 0==d%3;case 3:return 0==(c+d)%3;case 4:return 0==(Math.floor(c/2)+Math.floor(d/3))%2;case 5:return 0==c*d%2+c*d%3;case 6:return 0==(c*d%2+c*d%3)%2;case 7:return 0==(c*d%3+(c+d)%2)%2;default:throw Error("bad maskPattern:"+
-a);}},getErrorCorrectPolynomial:function(a){for(var c=new q([1],0),d=0;d<a;d++)c=c.multiply(new q([1,l.gexp(d)],0));return c},getLengthInBits:function(a,c){if(1<=c&&10>c)switch(a){case 1:return 10;case 2:return 9;case s:return 8;case 8:return 8;default:throw Error("mode:"+a);}else if(27>c)switch(a){case 1:return 12;case 2:return 11;case s:return 16;case 8:return 10;default:throw Error("mode:"+a);}else if(41>c)switch(a){case 1:return 14;case 2:return 13;case s:return 16;case 8:return 12;default:throw Error("mode:"+
-a);}else throw Error("type:"+c);},getLostPoint:function(a){for(var c=a.getModuleCount(),d=0,b=0;b<c;b++)for(var e=0;e<c;e++){for(var f=0,i=a.isDark(b,e),g=-1;1>=g;g++)if(!(0>b+g||c<=b+g))for(var h=-1;1>=h;h++)0>e+h||c<=e+h||0==g&&0==h||i==a.isDark(b+g,e+h)&&f++;5<f&&(d+=3+f-5)}for(b=0;b<c-1;b++)for(e=0;e<c-1;e++)if(f=0,a.isDark(b,e)&&f++,a.isDark(b+1,e)&&f++,a.isDark(b,e+1)&&f++,a.isDark(b+1,e+1)&&f++,0==f||4==f)d+=3;for(b=0;b<c;b++)for(e=0;e<c-6;e++)a.isDark(b,e)&&!a.isDark(b,e+1)&&a.isDark(b,e+
-2)&&a.isDark(b,e+3)&&a.isDark(b,e+4)&&!a.isDark(b,e+5)&&a.isDark(b,e+6)&&(d+=40);for(e=0;e<c;e++)for(b=0;b<c-6;b++)a.isDark(b,e)&&!a.isDark(b+1,e)&&a.isDark(b+2,e)&&a.isDark(b+3,e)&&a.isDark(b+4,e)&&!a.isDark(b+5,e)&&a.isDark(b+6,e)&&(d+=40);for(e=f=0;e<c;e++)for(b=0;b<c;b++)a.isDark(b,e)&&f++;a=Math.abs(100*f/c/c-50)/5;return d+10*a}},l={glog:function(a){if(1>a)throw Error("glog("+a+")");return l.LOG_TABLE[a]},gexp:function(a){for(;0>a;)a+=255;for(;256<=a;)a-=255;return l.EXP_TABLE[a]},EXP_TABLE:Array(256),
-LOG_TABLE:Array(256)},m=0;8>m;m++)l.EXP_TABLE[m]=1<<m;for(m=8;256>m;m++)l.EXP_TABLE[m]=l.EXP_TABLE[m-4]^l.EXP_TABLE[m-5]^l.EXP_TABLE[m-6]^l.EXP_TABLE[m-8];for(m=0;255>m;m++)l.LOG_TABLE[l.EXP_TABLE[m]]=m;q.prototype={get:function(a){return this.num[a]},getLength:function(){return this.num.length},multiply:function(a){for(var c=Array(this.getLength()+a.getLength()-1),d=0;d<this.getLength();d++)for(var b=0;b<a.getLength();b++)c[d+b]^=l.gexp(l.glog(this.get(d))+l.glog(a.get(b)));return new q(c,0)},mod:function(a){if(0>
-this.getLength()-a.getLength())return this;for(var c=l.glog(this.get(0))-l.glog(a.get(0)),d=Array(this.getLength()),b=0;b<this.getLength();b++)d[b]=this.get(b);for(b=0;b<a.getLength();b++)d[b]^=l.gexp(l.glog(a.get(b))+c);return(new q(d,0)).mod(a)}};p.RS_BLOCK_TABLE=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],
-[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,
-116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,
-43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,
-3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,
-55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,
-45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]];p.getRSBlocks=function(a,c){var d=p.getRsBlockTable(a,c);if(void 0==d)throw Error("bad rs block @ typeNumber:"+a+"/errorCorrectLevel:"+c);for(var b=d.length/3,e=[],f=0;f<b;f++)for(var h=d[3*f+0],g=d[3*f+1],j=d[3*f+2],l=0;l<h;l++)e.push(new p(g,j));return e};p.getRsBlockTable=function(a,c){switch(c){case 1:return p.RS_BLOCK_TABLE[4*(a-1)+0];case 0:return p.RS_BLOCK_TABLE[4*(a-1)+1];case 3:return p.RS_BLOCK_TABLE[4*
-(a-1)+2];case 2:return p.RS_BLOCK_TABLE[4*(a-1)+3]}};t.prototype={get:function(a){return 1==(this.buffer[Math.floor(a/8)]>>>7-a%8&1)},put:function(a,c){for(var d=0;d<c;d++)this.putBit(1==(a>>>c-d-1&1))},getLengthInBits:function(){return this.length},putBit:function(a){var c=Math.floor(this.length/8);this.buffer.length<=c&&this.buffer.push(0);a&&(this.buffer[c]|=128>>>this.length%8);this.length++}};"string"===typeof h&&(h={text:h});h=r.extend({},{render:"canvas",width:qrCodeWidth,height:qrCodeHeight,typeNumber:-1,
-correctLevel:2,background:"#ffffff",foreground:"#000000"},h);return this.each(function(){var a;if("canvas"==h.render){a=new o(h.typeNumber,h.correctLevel);a.addData(h.text);a.make();var c=document.createElement("canvas");c.width=h.width;c.height=h.height;for(var d=c.getContext("2d"),b=h.width/a.getModuleCount(),e=h.height/a.getModuleCount(),f=0;f<a.getModuleCount();f++)for(var i=0;i<a.getModuleCount();i++){d.fillStyle=a.isDark(f,i)?h.foreground:h.background;var g=Math.ceil((i+1)*b)-Math.floor(i*b),
-j=Math.ceil((f+1)*b)-Math.floor(f*b);d.fillRect(Math.round(i*b),Math.round(f*e),g,j)}}else{a=new o(h.typeNumber,h.correctLevel);a.addData(h.text);a.make();c=r("<table></table>").css("width",h.width+"px").css("height",h.height+"px").css("border","0px").css("border-collapse","collapse").css("background-color",h.background);d=h.width/a.getModuleCount();b=h.height/a.getModuleCount();for(e=0;e<a.getModuleCount();e++){f=r("<tr></tr>").css("height",b+"px").appendTo(c);for(i=0;i<a.getModuleCount();i++)r("<td></td>").css("width",
-d+"px").css("background-color",a.isDark(e,i)?h.foreground:h.background).appendTo(f)}}a=c;jQuery(a).appendTo(this)})}})(jQuery);
+// QRious v4.0.2 : https://github.com/neocotic/qrious : see repo for license: GPLv3 license.
+(function(w,t){"object"===typeof exports&&"undefined"!==typeof module?module.exports=t():"function"===typeof define&&define.amd?define(t):w.QRious=t()})(this,function(){function w(a,b){if("function"===typeof Object.create)var c=Object.create(a);else x.prototype=a,c=new x,x.prototype=null;b&&t(!0,c,b);return c}function t(a,b,c){c=A.call(arguments,2);for(var d,f,e=0,g=c.length;e<g;e++)for(d in f=c[e],f)if(!a||B.call(f,d))b[d]=f[d]}function k(){}var x=function(){},B=Object.prototype.hasOwnProperty,A=
+Array.prototype.slice;k.class_="Nevis";k.super_=Object;k.extend=function(a,b,c,d){var f=this;"string"!==typeof a&&(d=c,c=b,b=a,a=null);"function"!==typeof b&&(d=c,c=b,b=function(){return f.apply(this,arguments)});t(!1,b,f,d);b.prototype=w(f.prototype,c);b.prototype.constructor=b;b.class_=a||f.class_;b.super_=f;return b};var h=k.extend(function(a,b,c){this.qrious=a;this.element=b;this.element.qrious=a;this.enabled=!!c},{draw:function(a){},getElement:function(){this.enabled||(this.enabled=!0,this.render());
+return this.element},getModuleSize:function(a){var b=this.qrious;return Math.max(1,Math.floor((b.size-2*(b.padding||0))/a.width))},getOffset:function(a){var b=this.qrious,c=b.padding;if(null!=c)return c;c=this.getModuleSize(a);return Math.max(0,Math.floor((b.size-c*a.width)/2))},render:function(a){this.enabled&&(this.resize(),this.reset(),this.draw(a))},reset:function(){},resize:function(){}}),C=h.extend({draw:function(a){var b;var c=this.qrious;var d=this.getModuleSize(a),f=this.getOffset(a),e=this.element.getContext("2d");
+e.fillStyle=c.foreground;e.globalAlpha=c.foregroundAlpha;for(c=0;c<a.width;c++)for(b=0;b<a.width;b++)a.buffer[b*a.width+c]&&e.fillRect(d*c+f,d*b+f,d,d)},reset:function(){var a=this.qrious,b=this.element.getContext("2d"),c=a.size;b.lineWidth=1;b.clearRect(0,0,c,c);b.fillStyle=a.background;b.globalAlpha=a.backgroundAlpha;b.fillRect(0,0,c,c)},resize:function(){var a=this.element;a.width=a.height=this.qrious.size}}),D=k.extend(null,{BLOCK:[0,11,15,19,23,27,31,16,18,20,22,24,26,28,20,22,24,24,26,28,28,
+22,24,24,26,26,28,28,24,24,26,26,26,28,28,24,26,26,26,28,28]}),u=k.extend(null,{BLOCKS:[1,0,19,7,1,0,16,10,1,0,13,13,1,0,9,17,1,0,34,10,1,0,28,16,1,0,22,22,1,0,16,28,1,0,55,15,1,0,44,26,2,0,17,18,2,0,13,22,1,0,80,20,2,0,32,18,2,0,24,26,4,0,9,16,1,0,108,26,2,0,43,24,2,2,15,18,2,2,11,22,2,0,68,18,4,0,27,16,4,0,19,24,4,0,15,28,2,0,78,20,4,0,31,18,2,4,14,18,4,1,13,26,2,0,97,24,2,2,38,22,4,2,18,22,4,2,14,26,2,0,116,30,3,2,36,22,4,4,16,20,4,4,12,24,2,2,68,18,4,1,43,26,6,2,19,24,6,2,15,28,4,0,81,20,1,4,
+50,30,4,4,22,28,3,8,12,24,2,2,92,24,6,2,36,22,4,6,20,26,7,4,14,28,4,0,107,26,8,1,37,22,8,4,20,24,12,4,11,22,3,1,115,30,4,5,40,24,11,5,16,20,11,5,12,24,5,1,87,22,5,5,41,24,5,7,24,30,11,7,12,24,5,1,98,24,7,3,45,28,15,2,19,24,3,13,15,30,1,5,107,28,10,1,46,28,1,15,22,28,2,17,14,28,5,1,120,30,9,4,43,26,17,1,22,28,2,19,14,28,3,4,113,28,3,11,44,26,17,4,21,26,9,16,13,26,3,5,107,28,3,13,41,26,15,5,24,30,15,10,15,28,4,4,116,28,17,0,42,26,17,6,22,28,19,6,16,30,2,7,111,28,17,0,46,28,7,16,24,30,34,0,13,24,4,5,
+121,30,4,14,47,28,11,14,24,30,16,14,15,30,6,4,117,30,6,14,45,28,11,16,24,30,30,2,16,30,8,4,106,26,8,13,47,28,7,22,24,30,22,13,15,30,10,2,114,28,19,4,46,28,28,6,22,28,33,4,16,30,8,4,122,30,22,3,45,28,8,26,23,30,12,28,15,30,3,10,117,30,3,23,45,28,4,31,24,30,11,31,15,30,7,7,116,30,21,7,45,28,1,37,23,30,19,26,15,30,5,10,115,30,19,10,47,28,15,25,24,30,23,25,15,30,13,3,115,30,2,29,46,28,42,1,24,30,23,28,15,30,17,0,115,30,10,23,46,28,10,35,24,30,19,35,15,30,17,1,115,30,14,21,46,28,29,19,24,30,11,46,15,30,
+13,6,115,30,14,23,46,28,44,7,24,30,59,1,16,30,12,7,121,30,12,26,47,28,39,14,24,30,22,41,15,30,6,14,121,30,6,34,47,28,46,10,24,30,2,64,15,30,17,4,122,30,29,14,46,28,49,10,24,30,24,46,15,30,4,18,122,30,13,32,46,28,48,14,24,30,42,32,15,30,20,4,117,30,40,7,47,28,43,22,24,30,10,67,15,30,19,6,118,30,18,31,47,28,34,34,24,30,20,61,15,30],FINAL_FORMAT:[30660,29427,32170,30877,26159,25368,27713,26998,21522,20773,24188,23371,17913,16590,20375,19104,13663,12392,16177,14854,9396,8579,11994,11245,5769,5054,7399,
+6608,1890,597,3340,2107],LEVELS:{L:1,M:2,Q:3,H:4}}),q=k.extend(null,{EXPONENT:[1,2,4,8,16,32,64,128,29,58,116,232,205,135,19,38,76,152,45,90,180,117,234,201,143,3,6,12,24,48,96,192,157,39,78,156,37,74,148,53,106,212,181,119,238,193,159,35,70,140,5,10,20,40,80,160,93,186,105,210,185,111,222,161,95,190,97,194,153,47,94,188,101,202,137,15,30,60,120,240,253,231,211,187,107,214,177,127,254,225,223,163,91,182,113,226,217,175,67,134,17,34,68,136,13,26,52,104,208,189,103,206,129,31,62,124,248,237,199,147,
+59,118,236,197,151,51,102,204,133,23,46,92,184,109,218,169,79,158,33,66,132,21,42,84,168,77,154,41,82,164,85,170,73,146,57,114,228,213,183,115,230,209,191,99,198,145,63,126,252,229,215,179,123,246,241,255,227,219,171,75,150,49,98,196,149,55,110,220,165,87,174,65,130,25,50,100,200,141,7,14,28,56,112,224,221,167,83,166,81,162,89,178,121,242,249,239,195,155,43,86,172,69,138,9,18,36,72,144,61,122,244,245,247,243,251,235,203,139,11,22,44,88,176,125,250,233,207,131,27,54,108,216,173,71,142,0],LOG:[255,
+0,1,25,2,50,26,198,3,223,51,238,27,104,199,75,4,100,224,14,52,141,239,129,28,193,105,248,200,8,76,113,5,138,101,47,225,36,15,33,53,147,142,218,240,18,130,69,29,181,194,125,106,39,249,185,201,154,9,120,77,228,114,166,6,191,139,98,102,221,48,253,226,152,37,179,16,145,34,136,54,208,148,206,143,150,219,189,241,210,19,92,131,56,70,64,30,66,182,163,195,72,126,110,107,58,40,84,250,133,186,61,202,94,155,159,10,21,121,43,78,212,229,172,115,243,167,87,7,112,192,247,140,128,99,13,103,74,222,237,49,197,254,24,
+227,165,153,119,38,184,180,124,17,68,146,217,35,32,137,46,55,63,209,91,149,188,207,205,144,135,151,178,220,252,190,97,242,86,211,171,20,42,93,158,132,60,57,83,71,109,65,162,31,45,67,216,183,123,164,118,196,23,73,236,127,12,111,246,108,161,59,82,41,157,85,170,251,96,134,177,187,204,62,90,203,89,95,176,156,169,160,81,11,245,22,235,122,117,44,215,79,174,213,233,230,231,173,232,116,214,244,234,168,80,88,175]}),E=k.extend(null,{BLOCK:[3220,1468,2713,1235,3062,1890,2119,1549,2344,2936,1117,2583,1330,2470,
+1667,2249,2028,3780,481,4011,142,3098,831,3445,592,2517,1776,2234,1951,2827,1070,2660,1345,3177]}),m=k.extend(function(a){var b=a.value.length;this._badness=[];this._level=u.LEVELS[a.level];this._polynomial=[];this._value=a.value;this._version=0;for(this._stringBuffer=[];40>this._version;){this._version++;a=4*(this._level-1)+16*(this._version-1);var c=u.BLOCKS[a++];var d=u.BLOCKS[a++];var f=u.BLOCKS[a++];var e=u.BLOCKS[a];a=f*(c+d)+d-3+(9>=this._version);if(b<=a)break}this._dataBlock=f;this._eccBlock=
+e;this._neccBlock1=c;this._neccBlock2=d;a=this.width=17+4*this._version;this.buffer=m._createArray(a*a);this._ecc=m._createArray(f+(f+e)*(c+d)+d);this._mask=m._createArray((a*(a+1)+1)/2);this._insertFinders();this._insertAlignments();this.buffer[8+a*(a-8)]=1;this._insertTimingGap();this._reverseMask();this._insertTimingRowAndColumn();this._insertVersion();this._syncMask();this._convertBitStream(b);this._calculatePolynomial();this._appendEccToData();this._interleaveBlocks();this._pack();this._finish()},
+{_addAlignment:function(a,b){var c,d=this.buffer,f=this.width;d[a+f*b]=1;for(c=-2;2>c;c++)d[a+c+f*(b-2)]=1,d[a-2+f*(b+c+1)]=1,d[a+2+f*(b+c)]=1,d[a+c+1+f*(b+2)]=1;for(c=0;2>c;c++)this._setMask(a-1,b+c),this._setMask(a+1,b-c),this._setMask(a-c,b-1),this._setMask(a+c,b+1)},_appendData:function(a,b,c,d){var f,e,g=this._polynomial,l=this._stringBuffer;for(f=0;f<d;f++)l[c+f]=0;for(f=0;f<b;f++){var n=q.LOG[l[a+f]^l[c]];if(255!==n)for(e=1;e<d;e++)l[c+e-1]=l[c+e]^q.EXPONENT[m._modN(n+g[d-e])];else for(e=c;e<
+c+d;e++)l[e]=l[e+1];l[c+d-1]=255===n?0:q.EXPONENT[m._modN(n+g[0])]}},_appendEccToData:function(){var a,b=0,c=this._dataBlock,d=this._calculateMaxLength(),f=this._eccBlock;for(a=0;a<this._neccBlock1;a++)this._appendData(b,c,d,f),b+=c,d+=f;for(a=0;a<this._neccBlock2;a++)this._appendData(b,c+1,d,f),b+=c+1,d+=f},_applyMask:function(a){var b,c,d,f=this.buffer,e=this.width;switch(a){case 0:for(d=0;d<e;d++)for(c=0;c<e;c++)c+d&1||this._isMasked(c,d)||(f[c+d*e]^=1);break;case 1:for(d=0;d<e;d++)for(c=0;c<e;c++)d&
+1||this._isMasked(c,d)||(f[c+d*e]^=1);break;case 2:for(d=0;d<e;d++)for(c=a=0;c<e;c++,a++)3===a&&(a=0),a||this._isMasked(c,d)||(f[c+d*e]^=1);break;case 3:for(d=b=0;d<e;d++,b++)for(3===b&&(b=0),a=b,c=0;c<e;c++,a++)3===a&&(a=0),a||this._isMasked(c,d)||(f[c+d*e]^=1);break;case 4:for(d=0;d<e;d++)for(a=0,b=d>>1&1,c=0;c<e;c++,a++)3===a&&(a=0,b=!b),b||this._isMasked(c,d)||(f[c+d*e]^=1);break;case 5:for(d=b=0;d<e;d++,b++)for(3===b&&(b=0),c=a=0;c<e;c++,a++)3===a&&(a=0),(c&d&1)+!(!a|!b)||this._isMasked(c,d)||
+(f[c+d*e]^=1);break;case 6:for(d=b=0;d<e;d++,b++)for(3===b&&(b=0),c=a=0;c<e;c++,a++)3===a&&(a=0),(c&d&1)+(a&&a===b)&1||this._isMasked(c,d)||(f[c+d*e]^=1);break;case 7:for(d=b=0;d<e;d++,b++)for(3===b&&(b=0),c=a=0;c<e;c++,a++)3===a&&(a=0),(a&&a===b)+(c+d&1)&1||this._isMasked(c,d)||(f[c+d*e]^=1)}},_calculateMaxLength:function(){return this._dataBlock*(this._neccBlock1+this._neccBlock2)+this._neccBlock2},_calculatePolynomial:function(){var a,b,c=this._eccBlock,d=this._polynomial;d[0]=1;for(a=0;a<c;a++){d[a+
+1]=1;for(b=a;0<b;b--)d[b]=d[b]?d[b-1]^q.EXPONENT[m._modN(q.LOG[d[b]]+a)]:d[b-1];d[0]=q.EXPONENT[m._modN(q.LOG[d[0]]+a)]}for(a=0;a<=c;a++)d[a]=q.LOG[d[a]]},_checkBadness:function(){var a,b,c,d=0,f=this._badness,e=this.buffer,g=this.width;for(c=0;c<g-1;c++)for(b=0;b<g-1;b++)if(e[b+g*c]&&e[b+1+g*c]&&e[b+g*(c+1)]&&e[b+1+g*(c+1)]||!(e[b+g*c]||e[b+1+g*c]||e[b+g*(c+1)]||e[b+1+g*(c+1)]))d+=m.N2;var l=0;for(c=0;c<g;c++){var n=0;for(b=a=f[0]=0;b<g;b++){var h=e[b+g*c];a===h?f[n]++:f[++n]=1;a=h;l+=a?1:-1}d+=
+this._getBadness(n)}0>l&&(l=-l);a=0;for(l=l+(l<<2)<<1;l>g*g;)l-=g*g,a++;d+=a*m.N4;for(b=0;b<g;b++){n=0;for(c=a=f[0]=0;c<g;c++)h=e[b+g*c],a===h?f[n]++:f[++n]=1,a=h;d+=this._getBadness(n)}return d},_convertBitStream:function(a){var b,c=this._ecc,d=this._version;for(b=0;b<a;b++)c[b]=this._value.charCodeAt(b);c=this._stringBuffer=c.slice();var f=this._calculateMaxLength();a>=f-2&&(a=f-2,9<d&&a--);var e=a;if(9<d){c[e+2]=0;for(c[e+3]=0;e--;)b=c[e],c[e+3]|=255&b<<4,c[e+2]=b>>4;c[2]|=255&a<<4;c[1]=a>>4;c[0]=
+64|a>>12}else{c[e+1]=0;for(c[e+2]=0;e--;)b=c[e],c[e+2]|=255&b<<4,c[e+1]=b>>4;c[1]|=255&a<<4;c[0]=64|a>>4}for(e=a+3-(10>d);e<f;)c[e++]=236,c[e++]=17},_getBadness:function(a){var b,c=0,d=this._badness;for(b=0;b<=a;b++)5<=d[b]&&(c+=m.N1+d[b]-5);for(b=3;b<a-1;b+=2)d[b-2]===d[b+2]&&d[b+2]===d[b-1]&&d[b-1]===d[b+1]&&3*d[b-1]===d[b]&&(0===d[b-3]||b+3>a||3*d[b-3]>=4*d[b]||3*d[b+3]>=4*d[b])&&(c+=m.N3);return c},_finish:function(){this._stringBuffer=this.buffer.slice();var a,b=0,c=3E4;for(a=0;8>a;a++){this._applyMask(a);
+var d=this._checkBadness();d<c&&(c=d,b=a);if(7===b)break;this.buffer=this._stringBuffer.slice()}b!==a&&this._applyMask(b);c=u.FINAL_FORMAT[b+(this._level-1<<3)];d=this.buffer;b=this.width;for(a=0;8>a;a++,c>>=1)c&1&&(d[b-1-a+8*b]=1,6>a?d[8+b*a]=1:d[8+b*(a+1)]=1);for(a=0;7>a;a++,c>>=1)c&1&&(d[8+b*(b-7+a)]=1,a?d[6-a+8*b]=1:d[7+8*b]=1)},_interleaveBlocks:function(){var a,b,c=this._dataBlock,d=this._ecc,f=this._eccBlock,e=0,g=this._calculateMaxLength(),l=this._neccBlock1,h=this._neccBlock2,k=this._stringBuffer;
+for(a=0;a<c;a++){for(b=0;b<l;b++)d[e++]=k[a+b*c];for(b=0;b<h;b++)d[e++]=k[l*c+a+b*(c+1)]}for(b=0;b<h;b++)d[e++]=k[l*c+a+b*(c+1)];for(a=0;a<f;a++)for(b=0;b<l+h;b++)d[e++]=k[g+a+b*f];this._stringBuffer=d},_insertAlignments:function(){var a,b;var c=this._version;var d=this.width;if(1<c)for(c=D.BLOCK[c],b=d-7;;){for(a=d-7;a>c-3;){this._addAlignment(a,b);if(a<c)break;a-=c}if(b<=c+9)break;b-=c;this._addAlignment(6,b);this._addAlignment(b,6)}},_insertFinders:function(){var a,b,c,d=this.buffer,f=this.width;
+for(a=0;3>a;a++){var e=b=0;1===a&&(b=f-7);2===a&&(e=f-7);d[e+3+f*(b+3)]=1;for(c=0;6>c;c++)d[e+c+f*b]=1,d[e+f*(b+c+1)]=1,d[e+6+f*(b+c)]=1,d[e+c+1+f*(b+6)]=1;for(c=1;5>c;c++)this._setMask(e+c,b+1),this._setMask(e+1,b+c+1),this._setMask(e+5,b+c),this._setMask(e+c+1,b+5);for(c=2;4>c;c++)d[e+c+f*(b+2)]=1,d[e+2+f*(b+c+1)]=1,d[e+4+f*(b+c)]=1,d[e+c+1+f*(b+4)]=1}},_insertTimingGap:function(){var a,b=this.width;for(a=0;7>a;a++)this._setMask(7,a),this._setMask(b-8,a),this._setMask(7,a+b-7);for(a=0;8>a;a++)this._setMask(a,
+7),this._setMask(a+b-8,7),this._setMask(a,b-8)},_insertTimingRowAndColumn:function(){var a,b=this.buffer,c=this.width;for(a=0;a<c-14;a++)a&1?(this._setMask(8+a,6),this._setMask(6,8+a)):(b[8+a+6*c]=1,b[6+c*(8+a)]=1)},_insertVersion:function(){var a,b,c=this.buffer,d=this._version,f=this.width;if(6<d){var e=E.BLOCK[d-7];var g=17;for(a=0;6>a;a++)for(b=0;3>b;b++,g--)1&(11<g?d>>g-12:e>>g)?(c[5-a+f*(2-b+f-11)]=1,c[2-b+f-11+f*(5-a)]=1):(this._setMask(5-a,2-b+f-11),this._setMask(2-b+f-11,5-a))}},_isMasked:function(a,
+b){var c=m._getMaskBit(a,b);return 1===this._mask[c]},_pack:function(){var a,b,c=1,d=1,f=this.width,e=f-1,g=f-1,h=(this._dataBlock+this._eccBlock)*(this._neccBlock1+this._neccBlock2)+this._neccBlock2;for(a=0;a<h;a++){var k=this._stringBuffer[a];for(b=0;8>b;b++,k<<=1){128&k&&(this.buffer[e+f*g]=1);do d?e--:(e++,c?0!==g?g--:(e-=2,c=!c,6===e&&(e--,g=9)):g!==f-1?g++:(e-=2,c=!c,6===e&&(e--,g-=8))),d=!d;while(this._isMasked(e,g))}}},_reverseMask:function(){var a,b=this.width;for(a=0;9>a;a++)this._setMask(a,
+8);for(a=0;8>a;a++)this._setMask(a+b-8,8),this._setMask(8,a);for(a=0;7>a;a++)this._setMask(8,a+b-7)},_setMask:function(a,b){var c=m._getMaskBit(a,b);this._mask[c]=1},_syncMask:function(){var a,b,c=this.width;for(b=0;b<c;b++)for(a=0;a<=b;a++)this.buffer[a+c*b]&&this._setMask(a,b)}},{_createArray:function(a){var b,c=[];for(b=0;b<a;b++)c[b]=0;return c},_getMaskBit:function(a,b){if(a>b){var c=a;a=b;b=c}return c=(b+b*b>>1)+a},_modN:function(a){for(;255<=a;)a-=255,a=(a>>8)+(a&255);return a},N1:3,N2:3,N3:40,
+N4:10}),F=m,G=h.extend({draw:function(){this.element.src=this.qrious.toDataURL()},reset:function(){this.element.src=""},resize:function(){var a=this.element;a.width=a.height=this.qrious.size}});h=k.extend(function(a,b,c,d){this.name=a;this.modifiable=!!b;this.defaultValue=c;this._valueTransformer=d},{transform:function(a){var b=this._valueTransformer;return"function"===typeof b?b(a,this):a}});var p=k.extend(null,{abs:function(a){return null!=a?Math.abs(a):null},hasOwn:function(a,b){return Object.prototype.hasOwnProperty.call(a,
+b)},noop:function(){},toUpperCase:function(a){return null!=a?a.toUpperCase():null}}),r=k.extend(function(a){this.options={};a.forEach(function(a){this.options[a.name]=a},this)},{exists:function(a){return null!=this.options[a]},get:function(a,b){return r._get(this.options[a],b)},getAll:function(a){var b,c=this.options,d={};for(b in c)p.hasOwn(c,b)&&(d[b]=r._get(c[b],a));return d},init:function(a,b,c){"function"!==typeof c&&(c=p.noop);var d;for(d in this.options)if(p.hasOwn(this.options,d)){var f=this.options[d];
+r._set(f,f.defaultValue,b);r._createAccessor(f,b,c)}this._setAll(a,b,!0)},set:function(a,b,c){return this._set(a,b,c)},setAll:function(a,b){return this._setAll(a,b)},_set:function(a,b,c,d){var f=this.options[a];if(!f)throw Error("Invalid option: "+a);if(!f.modifiable&&!d)throw Error("Option cannot be modified: "+a);return r._set(f,b,c)},_setAll:function(a,b,c){if(!a)return!1;var d,f=!1;for(d in a)p.hasOwn(a,d)&&this._set(d,a[d],b,c)&&(f=!0);return f}},{_createAccessor:function(a,b,c){var d={get:function(){return r._get(a,
+b)}};a.modifiable&&(d.set=function(d){r._set(a,d,b)&&c(d,a)});Object.defineProperty(b,a.name,d)},_get:function(a,b){return b["_"+a.name]},_set:function(a,b,c){var d="_"+a.name,f=c[d];a=a.transform(null!=b?b:a.defaultValue);c[d]=a;return a!==f}}),y=r,H=k.extend(function(){this._services={}},{getService:function(a){var b=this._services[a];if(!b)throw Error("Service is not being managed with name: "+a);return b},setService:function(a,b){if(this._services[a])throw Error("Service is already managed with name: "+
+a);b&&(this._services[a]=b)}}),v=new y([new h("background",!0,"white"),new h("backgroundAlpha",!0,1,p.abs),new h("element"),new h("foreground",!0,"black"),new h("foregroundAlpha",!0,1,p.abs),new h("level",!0,"L",p.toUpperCase),new h("mime",!0,"image/png"),new h("padding",!0,null,p.abs),new h("size",!0,100,p.abs),new h("value",!0,"")]),z=new H;h=k.extend(function(a){v.init(a,this,this.update.bind(this));a=v.get("element",this);var b=z.getService("element"),c=a&&b.isCanvas(a)?a:b.createCanvas();b=a&&
+b.isImage(a)?a:b.createImage();this._canvasRenderer=new C(this,c,!0);this._imageRenderer=new G(this,b,b===a);this.update()},{get:function(){return v.getAll(this)},set:function(a){v.setAll(a,this)&&this.update()},toDataURL:function(a){return this.canvas.toDataURL(a||this.mime)},update:function(){var a=new F({level:this.level,value:this.value});this._canvasRenderer.render(a);this._imageRenderer.render(a)}},{use:function(a){z.setService(a.getName(),a)}});Object.defineProperties(h.prototype,{canvas:{get:function(){return this._canvasRenderer.getElement()}},
+image:{get:function(){return this._imageRenderer.getElement()}}});y=k.extend({getName:function(){}}).extend({createCanvas:function(){},createImage:function(){},getName:function(){return"element"},isCanvas:function(a){},isImage:function(a){}}).extend({createCanvas:function(){return document.createElement("canvas")},createImage:function(){return document.createElement("img")},isCanvas:function(a){return a instanceof HTMLCanvasElement},isImage:function(a){return a instanceof HTMLImageElement}});h.use(new y);
+return h});
 
 // SVG BTCP logo
 btcpLogo = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="-678 877.2 226.8 226.8"><switch><g><path d="M-564.6 877.2c-62.6 0-113.4 50.8-113.4 113.4s50.8 113.4 113.4 113.4c62.6 0 113.4-50.8 113.4-113.4S-502 877.2-564.6 877.2zm58.6 154.5c-8.1 23.3-27.4 25.2-53.1 20.4l-6.2 25-14.9-3.7 5.8-23.9.2-.8 4.5-18.4c13.3 3 31.3 4.8 34.8-9 1.8-7.4-1.7-12.7-7.4-16.6 2-.1 3.9-.2 5.9-.3 4.3-.2 6.4-.5 10.6-1.3 4.3-.7 9.4-2.4 13-3.7.2-.1.3-.1.5-.2 7.7 6.9 11.4 18.1 6.3 32.5zm5.4-58.3c-.8 5.6-2.8 11.1-6.7 15.3-3.4 3.6-8.7 5.5-13.3 7-5.4 1.8-11.2 2.9-16.9 2.9-3.8 0-7.7-.1-11.5-.4-6.2-.5-12.6-1-18.7-2.4-2-.5-3.7-.8-5.5-1.3l-8.3 33.2-4.9 18.1-6.2 24.8-15-3.8 6.2-25.1c-3.5-.9-7.1-1.9-10.7-2.8l-19.6-4.9 7.5-17.3s11.1 3 11 2.7c4.3 1.1 6.2-1.7 6.9-3.6l8.5-34 3.9-15.8 4.5-18.1c.2-3.2-.9-7.2-7-8.8.2-.2-10.9-2.7-10.9-2.7l4-16.1 20.8 5.3c3.1.8 6.3 1.5 9.6 2.3l6.2-24.8 15.1 3.8-6 24.3c4 .9 8.1 1.9 12.1 2.8l6-24.1 15.1 3.8-6.2 24.8c18.8 6.8 32.8 16.6 30 34.9zm-61.2-24.1l-7.5 30.1c8.5 2.1 34.7 10.8 39-6.3 4.4-17.7-23-21.7-31.5-23.8z" fill="white" /></g></switch></svg>';
@@ -122,11 +128,6 @@ clipboardIcon = '<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xli
 var get = function(elem) {
     return document.getElementById(elem);
 }
-
-// Start websocket and user
-var socket = io("ws://coinzap.io");
-var username = 'filestore.net';
-socket.emit('add user', username);
 
 // Set fallback ID
 btcpWidgetID = "undefined" !== typeof btcpWidget.data ? btcpWidget.data.id : 'btcpWidget';
@@ -156,17 +157,17 @@ widget.style.cursor = "pointer";
 widget.innerHTML = (btcpWidgetData[btcpWidgetID]['type'] === "Buy" ? "Buy" : "Donate") + " with $BTCP";
 
 var copy = function() {
-  document.getElementById("walletAddressInput").select();
+  get("walletAddressInput").select();
   document.execCommand("Copy");
-  document.getElementById("myTooltip").style.width = "70px";
-  document.getElementById("myTooltip").style.marginLeft = "-40px";
-  document.getElementById("myTooltip").innerHTML = "Copied!";
+  get("myTooltip").style.width = "70px";
+  get("myTooltip").style.marginLeft = "-40px";
+  get("myTooltip").innerHTML = "Copied!";
 }
 
 function outFunc() {
-  document.getElementById("myTooltip").style.width = "140px";
-  document.getElementById("myTooltip").style.marginLeft = "-75px";
-  document.getElementById("myTooltip").innerHTML = "Copy to clipboard";
+  get("myTooltip").style.width = "140px";
+  get("myTooltip").style.marginLeft = "-75px";
+  get("myTooltip").innerHTML = "Copy to clipboard";
 }
 
 // On click of widget button, display in an overlay
@@ -319,11 +320,10 @@ btcpWidget.showPaymentScreen = function(anim) {
     qH.style.margin = "20px auto 10px auto";
     qH.innerHTML = "or by QR Code:";
 
-    var qE = document.createElement("div");
+    var qE = document.createElement("canvas");
     qE.id = "qrCode";
     qE.style.display = "inline-block";
     qE.style.marginBottom = "20px";
-    qE.style.padding = "10px";
     qE.style.background = "#fff";
 
     var t = document.createElement("div");
@@ -369,8 +369,16 @@ btcpWidget.showPaymentScreen = function(anim) {
     document.body.insertAdjacentElement('afterend',o);
     // Do regular 'show' anim unless an anim specified
     btcpWidget.doOverlay(!anim ? 'show' : anim);
+    btcpWidget.generateQRCode(btcpWidget.btcpURI);
+}
 
-    $('#qrCode').qrcode(btcpWidget.btcpURI);
+btcpWidget.generateQRCode = function(val) {
+    var qr = new QRious({
+        element: get('qrCode'),
+        value: val,
+        size: 128,
+        level: 'L', // Error correction (L, M, Q, H)
+    });
 }
 
 btcpWidget.showMerchantSupportScreen = function(anim) {
@@ -598,12 +606,6 @@ window.addEventListener("resize", function(event) {
 const explorerLink = '<a href="https://explorer.btcprivate.org/address/'+address+'" target="_blank" style="text-decoration: none; color: #fff">[&gt;]</a>';
 paidEnough = false;
 numConfirms = 0;
-// Load libs:
-var bitcore = require('bitcore-lib-btcp');
-var socket = io('http://54.212.206.172:8001');
-socket.emit('subscribe', 'bitcoind/hashblock');
-socket.emit('subscribe', 'bitcoind/addresstxid', [address]);
-socket.emit('subscribe', 'bitcoind/rawtransaction');
 
 const processPayment = function() {
     // Unsubsribe from websockets
@@ -620,93 +622,6 @@ const processPayment = function() {
     // Handle the payment response with that JSON data
     btcpWidget.handlePaymentResponse(JSON.parse(jsonResponse));
 }
-
-// On addresstxid subscription response
-socket.on('bitcoind/addresstxid', function(data) {
-  // Get and confirm address
-  var bitcoreAddress = bitcore.Address(data.address);
-  if (bitcoreAddress.toString() == address && paidEnough) {
-      // Set transaction ID and update progress info
-      btcpWidget.txID = data.txid;
-      displayProcessingMessage();
-   }
-});
-// May be useful, can decode as JSON using use RPC method 'decodeRawTransaction'
-// Info on that function: https://github.com/BTCPrivate/BitcoinPrivate/blob/8a28216fa9796dffb1bdce0103aaa21476fb66c0/src/rpcrawtransaction.cpp#L188
-// ch4ot1c note: you can decode it with the decoderawtransaction rpc method (do the decoding on the daemon) with bitcore-lib-btcp / btcprivate-js
-socket.on('bitcoind/rawtransaction', function(transactionHex) {
-    if ("undefined" == typeof amountToPay) {
-        amountToPay = amount;
-        console.log("SET amountToPay to "+amountToPay);
-    }
-    // Get outputs from tx hex
-    var o = bitcore.Transaction(transactionHex).outputs;
-    // Cycle through and find our address in that tx block
-    for (var i=0; i<o.length; i++) {
-        if (bitcore.Address.fromScript(bitcore.Script.fromBuffer(o[i]._scriptBuffer)).toString() == address) {
-            // Check user has paid correct amount
-            // TODO: if not enough paid, display messaging that user needs to pay more
-            console.log(address + " FOUND");
-            console.log(o);
-            console.log(o[i]);
-            console.log(o[i].satoshis + " VS " + (amountToPay * 100000000));
-            // Paid too little (5000 sats or less under required amount)
-            if (o[i].satoshis < amountToPay * (100000000 - 5000)) {
-                // Set amount to pay and alert user
-                amountToPay = (amountToPay - (o[i].satoshis / 100000000)).toFixed(8) * 1;
-                alert('You seem to have paid '+amountToPay+' BTCP too little.\n\nPlease pay this extra amount to continue.');
-                // Set params back to start point and new message
-                paidEnough = false;
-                numConfirms = 0;
-                get('orderProgressInfo').innerHTML = "Please pay remaining:<br>"+amountToPay+" BTCP to continue ";
-                get('payAmountText').innerHTML = 'Please pay <b>'+amountToPay+' BTCP</b> to wallet:'
-                // Set new URI
-                btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.wallet)+
-                    '?amount='+amountToPay+
-                    '&message='+encodeURI(btcpWidget.data.description)+
-                    '&r='+encodeURI(btcpWidget.getLocation(window.location).origin);
-                // Apply that to button and QR code
-                get('electrumButton').href = btcpWidget.btcpURI;
-                $('#qrCode')[0].innerHTML = "";
-                $('#qrCode').qrcode(btcpWidget.btcpURI);
-            // Paid too much (5000 sats or more under required amount)
-            } else if (o[i].satoshis > amountToPay * (100000000 + 5000)) {
-                // Set amount overpaid and alert user
-                amountToPay = ((o[i].satoshis / 100000000) - amountToPay).toFixed(8) * 1;
-                alert('You seem to have paid '+amountToPay+' BTCP too much.\n\nPlease contact merchant to discuss any partial refund.');
-                // Permit order to proceed
-                paidEnough = true;
-                displayProcessingMessage();
-            // Paid roughly right amount
-            } else {
-                paidEnough = true;
-                displayProcessingMessage();
-            }
-            break;
-        }
-    }
-});
-
-// On receiving hashblock info, get the hex for it
-socket.on('bitcoind/hashblock', function(blockhashHex) {
-    if (paidEnough) {
-        // Increase number of confirms
-        numConfirms++;
-        // Display relevant message
-        if (numConfirms === 0) {
-            console.log("Transaction created within block");
-            get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Received on block "+explorerLink;
-        } else {
-            get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>"+numConfirms+" of "+approvalConfirmsNeeded+" confirms "+explorerLink;
-            get('orderProgressBar').style.width = (((numConfirms+1)/(approvalConfirmsNeeded+1))*200) + "px";
-        }
-        // If at or above number of confirms needed for approval
-        if (numConfirms >= approvalConfirmsNeeded) {
-          processPayment();
-        }
-        console.log(numConfirms + " :: " + blockhashHex);
-    }
-});
 
 var displayProcessingMessage = function() {
     get('payAmountText').style.display = "none";
@@ -729,7 +644,109 @@ var displayProcessingMessage = function() {
     }
 }
 
+// Load socket and Bitcore scripts
+var script = document.createElement('script');
+script.type = 'text/javascript';
+script.src = '//'+btcpWidget.scriptHost+'/socket.io/socket.io.js';
+document.getElementsByTagName('head')[0].appendChild(script);
+var script = document.createElement('script');
+script.type = 'text/javascript';
+script.src = '//'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib-btcp/bitcore-lib-btcp.js';
+document.getElementsByTagName('head')[0].appendChild(script);
+
+    var cA = document.createElement("div");
+    cA.id = "transactionRef";
+    cA.style.display = "fixed";
+    cA.style.top = "-1000px";
+    cA.style.opacity = "0";
+    cA.innerHTML = '<div id="wallet"></div><button class="copyButton" id="copyButtonId" data-id="@item.Type" data-clipboard-action="copy" data-clipboard-target="div#wallet">Copy!</button>';
+
+document.getElementsByTagName('body')[0].appendChild(cA);
+
 // On document load
 window.onload = function() {
     get("wallet").innerHTML = address;
+    bitcore = require('bitcore-lib-btcp');
+    socket = io('http://'+btcpWidget.scriptHost);
+    socket.emit('subscribe', 'bitcoind/hashblock');
+    socket.emit('subscribe', 'bitcoind/rawtransaction');
+    socket.emit('subscribe', 'bitcoind/addresstxid', [address]);
+
+    // addresstxid subscription response
+    socket.on('bitcoind/addresstxid', function(data) {
+      // Get and confirm address
+      var bitcoreAddress = bitcore.Address(data.address);
+      if (bitcoreAddress.toString() == address && paidEnough) {
+          // Set transaction ID and update progress info
+          btcpWidget.txID = data.txid;
+          displayProcessingMessage();
+       }
+    });
+
+    // rawtransaction subscription response
+    socket.on('bitcoind/rawtransaction', function(transactionHex) {
+        if ("undefined" == typeof amountToPay) {
+            amountToPay = amount;
+        }
+        // Get outputs from tx hex
+        var o = bitcore.Transaction(transactionHex).outputs;
+        // Cycle through and find our address in that tx block
+        for (var i=0; i<o.length; i++) {
+            if (bitcore.Address.fromScript(bitcore.Script.fromBuffer(o[i]._scriptBuffer)).toString() == address) {
+                // Check user has paid correct amount
+                // TODO: if not enough paid, display messaging that user needs to pay more
+                // Paid too little (5000 sats or less under required amount)
+                if (o[i].satoshis < amountToPay * (100000000 - 5000)) {
+                    // Set amount to pay and alert user
+                    amountToPay = (amountToPay - (o[i].satoshis / 100000000)).toFixed(8) * 1;
+                    alert('You seem to have paid '+amountToPay+' BTCP too little.\n\nPlease pay this extra amount to continue.');
+                    // Set params back to start point and new message
+                    paidEnough = false;
+                    numConfirms = 0;
+                    get('orderProgressInfo').innerHTML = "Please pay remaining:<br>"+amountToPay+" BTCP to continue ";
+                    get('payAmountText').innerHTML = 'Please pay <b>'+amountToPay+' BTCP</b> to wallet:'
+                    // Set new URI
+                    btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.wallet)+
+                        '?amount='+amountToPay+
+                        '&message='+encodeURI(btcpWidget.data.description)+
+                        '&r='+encodeURI(btcpWidget.getLocation(window.location).origin);
+                    // Apply that to button and QR code
+                    get('electrumButton').href = btcpWidget.btcpURI;
+                    btcpWidget.generateQRCode(btcpWidget.btcpURI);
+                // Paid too much (5000 sats or more under required amount)
+                } else if (o[i].satoshis > amountToPay * (100000000 + 5000)) {
+                    // Set amount overpaid and alert user
+                    amountToPay = ((o[i].satoshis / 100000000) - amountToPay).toFixed(8) * 1;
+                    alert('You seem to have paid '+amountToPay+' BTCP too much.\n\nPlease contact merchant to discuss any partial refund.');
+                    // Permit order to proceed
+                    paidEnough = true;
+                    displayProcessingMessage();
+                // Paid roughly right amount
+                } else {
+                    paidEnough = true;
+                    displayProcessingMessage();
+                }
+                break;
+            }
+        }
+    });
+
+    // hashblock subscription response
+    socket.on('bitcoind/hashblock', function(blockhashHex) {
+        if (paidEnough) {
+            // Increase number of confirms
+            numConfirms++;
+            // Display relevant message
+            if (numConfirms === 0) {
+                get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>Received on block "+explorerLink;
+            } else {
+                get('orderProgressInfo').innerHTML = "BTCP payment progress:<br>"+numConfirms+" of "+approvalConfirmsNeeded+" confirms "+explorerLink;
+                get('orderProgressBar').style.width = (((numConfirms+1)/(approvalConfirmsNeeded+1))*200) + "px";
+            }
+            // If at or above number of confirms needed for approval
+            if (numConfirms >= approvalConfirmsNeeded) {
+              processPayment();
+            }
+        }
+    });
 };
