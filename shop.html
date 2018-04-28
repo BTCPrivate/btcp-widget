@@ -18,7 +18,7 @@
         const description = 'Pepperoni Pizza';
 
         btcpWidget.onPaymentSuccess = function(data) {
-          alert("Payment success! TXID: " + data.txid);
+          alert("Payment success! Data:\n\n" + JSON.stringify(data));
         };
 
         btcpWidget.onPaymentFail = function(data) {
