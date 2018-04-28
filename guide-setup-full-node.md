@@ -31,11 +31,14 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstances.html
 - https://github.com/BTCPrivate/bitcore-install contains shell scripts to setup everything you need and the AWS community AMI instance is an exact replica of what you'll get if you run btcp_store_demo.sh, ready made for speed and convinience. So you should be able to use this script to setup all you need on any other suitable provider, or your own server.
 
 
-## Notes
-When sync'ing the blockchain, you wait until it has fully sync'd for anything to be usable. This will take a few hours and slow down at point of fork (blocks 272991 to 278457) due to exceptionally large blocks compared to others due to BTCP airdrop. This is perfectly normal and you will notice blocks take longer to process and the network hash rate appears to dropto near zero as a result (eg 2 Sol/s).
-You can tell how far it is thru the process by visiting **https://explorer.btcprivate.org/** and noting the blockheight and where your setup currently is in your own sites webpage
+## Notes on running btcp_store_demo.sh
+During the running of this, it will ask if you want a fast or slow setup. If you choose fast, it will obtain a reasonably up to to date blockchain data from our repo. If you'd rather rebuild from scratch, choose slow. If you choose slow, to sync the blockchain will likely take a few hours and slow down significantly around the point of fork (blocks 272991 to 278457) due to exceptionally large blocks compared to others due to BTCP airdrop. This is perfectly normal and you will notice that the blocks take longer to process and the network hash rate appears to dropto near zero as a result (eg 2 Sol/s).
 
-Explorer and other public sites are found as NPM modules within btcp-explorer/node_modules eg btcp-explorer/node_modules/insight-ui-btcp is the Explorer
+## Dir structure
+There will be a couple of dirs in your home dir, an explanation of each is as follows:
+
+**BitcoinPrivate** - is a copy of our repo at https://github.com/BTCPrivate/BitcoinPrivate
+**btcp_explorer** - is the BTCP Explorer that is installed and the store demo files within btcp-explorer/node_modules/store-demo
 
 ## Support
 Should you have any issues regarding the setup as described above, please get in contact with us via your vendor account to ask for clarification on any of the above.
