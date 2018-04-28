@@ -20,7 +20,7 @@ You can set up on a good Linux server you have root access to. For the purpose o
 - Full guides if you need them re SSH usage from Windows, Mac and Linux here:
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstances.html
 
-## Sync'ing blockchain and starting Explorer (to see progress)
+## Sync'ing blockchain and starting Bitcore service
 - The server comes with most of the blockchain ready downloaded for you, so just need to start the service to sync up to current blockheight and continually check for new transactions:
 - `cd ~/btcp-explorer; nvm use v4; ./node_modules/bitcore-node-btcp/bin/bitcore-node start`
 
