@@ -10,8 +10,8 @@ You can set up on a good Linux server you have root access to. For the purpose o
 ## AWS setup
 - Go to **EC2** control panel
 - Switch to **Oregon** region
-- Create new Instance from community AMI **btcp_store_demo (ami-97d7b7ef)**
-  (The lowest free tier should be adequate, the of course the higher the spec the better it may perform)
+- Create new Instance from community AMI **BTCP-Store (ami-62e3881a)**
+  (The lowest free tier should be adequate, but of course the higher the spec the better it may perform)
 - Set security group rule for **TCP 8001**
 - Create instance
 - Create **new SSH key pair**
@@ -20,22 +20,19 @@ You can set up on a good Linux server you have root access to. For the purpose o
 - Full guides if you need them re SSH usage from Windows, Mac and Linux here:
 https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstances.html
 
-## Completing setup and running mongod
-- Run functions in install_mongodb (commented out)
-- `sudo chmod -R 777 /data`
-- `sudo apt install mongodb-server`
-- `sudo killall -15 mongod to clear port 27017`
-- `mongod &`
-
 ## Sync'ing blockchain and starting Explorer (to see progress)
-- Open 2nd SSH terminal instance
+- The server comes with most of the blockchain ready downloaded for you, so just need to start the service to sync up to current blockheight and continually check for new transactions:
 - `cd ~/btcp-explorer; nvm use v4; ./node_modules/bitcore-node-btcp/bin/bitcore-node start`
 
 ## Using BTCP Explorer:
 - View explorer at **http://((server_ip)):8001**
 
+## Setting up via other platforms (eg Digital Ocean, Google Cloud, own Linux server etc):
+- https://github.com/BTCPrivate/bitcore-install contains shell scripts to setup everything you need and the AWS community AMI instance is an exact replica of what you'll get if you run btcp_store_demo.sh, ready made for speed and convinience. So you should be able to use this script to setup all you need on any other suitable provider, or your own server.
+
+
 ## Notes
-When synci'ing the blockchain, you wait until it has fully sync'd for anything to be usable. This will take a few hours and slow down at point of fork (blocks 272991 to 278457) due to exceptionally large blocks compared to others due to BTCP airdrop. This is perfectly normal and you will notice blocks take longer to process and the network hash rate appears to dropto near zero as a result (eg 2 Sol/s).
+When sync'ing the blockchain, you wait until it has fully sync'd for anything to be usable. This will take a few hours and slow down at point of fork (blocks 272991 to 278457) due to exceptionally large blocks compared to others due to BTCP airdrop. This is perfectly normal and you will notice blocks take longer to process and the network hash rate appears to dropto near zero as a result (eg 2 Sol/s).
 You can tell how far it is thru the process by visiting **https://explorer.btcprivate.org/** and noting the blockheight and where your setup currently is in your own sites webpage
 
 Explorer and other public sites are found as NPM modules within btcp-explorer/node_modules eg btcp-explorer/node_modules/insight-ui-btcp is the Explorer
@@ -43,3 +40,6 @@ Explorer and other public sites are found as NPM modules within btcp-explorer/no
 ## Support
 Should you have any issues regarding the setup as described above, please get in contact with us via your vendor account to ask for clarification on any of the above.
 Please note however we can't assist managing your own custom setup or code, only advise on the above setup until you are up and running.
+
+## Disclaimer
+We provide any pre-made server setups via an AMI and shell scripts mentioned for your usage and convinience, free of charge. Whilst we encourage only our solutions rather than any 3rd party implementations, we cannot take any responsibility for the setup, running, ownership, cost or legal responsibility in any way. This information and anything we provide above is for your benefit and ultimately we cannot be held responsible for anything you run.
