@@ -32,17 +32,16 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstances.html
 
 
 ## Notes on running btcp_store_demo.sh
-During the running of this, it will ask if you want a fast or slow setup. If you choose fast, it will obtain a reasonably up to to date blockchain data from our repo. If you'd rather rebuild from scratch, choose slow. If you choose slow, to sync the blockchain will likely take a few hours and slow down significantly around the point of fork (blocks 272991 to 278457) due to exceptionally large blocks compared to others due to BTCP airdrop. This is perfectly normal and you will notice that the blocks take longer to process and the network hash rate appears to dropto near zero as a result (eg 2 Sol/s).
+During the running of this, it will ask if you want a fast or slow setup. If you choose fast, it will obtain a reasonably up to date blockchain data from our repo. If you'd rather rebuild from scratch, choose slow. Note that if you choose slow, to sync the blockchain will likely take a few hours and slow down significantly around the point of fork (blocks 272991 to 278457) due to exceptionally large blocks compared to others due to BTCP airdrop. This is perfectly normal and you will notice that the blocks take longer to process and the network hash rate appears to drop to near zero as a result (eg 2 Sol/s).
 
 ## Dir structure
-There will be a couple of dirs in your home dir, an explanation of each is as follows:
+There will be a couple of dirs in your home dir, an explanation of these is as follows:
 
 **BitcoinPrivate** - is a copy of our repo at https://github.com/BTCPrivate/BitcoinPrivate
 **btcp_explorer** - is the BTCP Explorer that is installed and the store demo files within btcp-explorer/node_modules/store-demo
 
 ## Support
-Should you have any issues regarding the setup as described above, please get in contact with us via your vendor account to ask for clarification on any of the above.
-Please note however we can't assist managing your own custom setup or code, only advise on the above setup until you are up and running.
+Should you have any issues regarding the setup as described above, please get in contact with us via your merchant account to ask for clarification on any of the above. Please note however we can't assist managing your own custom setup or code, only advise on the above setup until you are up and running.
 
 ## Disclaimer
-We provide any pre-made server setups via an AMI and shell scripts mentioned for your usage and convinience, free of charge. Whilst we encourage only our solutions rather than any 3rd party implementations, we cannot take any responsibility for the setup, running, ownership, cost or legal responsibility in any way. This information and anything we provide above is for your benefit and ultimately we cannot be held responsible for anything you run.
+We provide the pre-made AMI, plus shell scripts and information above for your usage and convenience, free of charge. Whilst we encourage only our solutions rather than any 3rd party implementations, we cannot take any responsibility for the setup, running, ownership, cost or legal responsibility in any way. Everything provided is for your benefit but ultimately we cannot be held responsible for anything you run.
