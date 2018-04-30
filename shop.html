@@ -13,9 +13,12 @@
 
     <script id="btcp_widget_data">
         var btcpWidget = {};
-        const address     = 'b1BpgPewXjPLLSVh8Rh2gAJniAfp7PgXjKg';
-        const amount      = 0.1;
-        const description = 'Pepperoni Pizza';
+        btcpWidget.data = {
+            "id"          : "btcp_widget",
+            "address"     : "b1BpgPewXjPLLSVh8Rh2gAJniAfp7PgXjKg",
+            "amount"      : 0.1,
+            "description" : "Pepperoni Pizza"
+        };
 
         btcpWidget.onPaymentSuccess = function(data) {
           alert("Payment success! Data:\n\n" + JSON.stringify(data));
