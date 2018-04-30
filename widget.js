@@ -1,18 +1,10 @@
-////////////////////////
-// BTCP Widget - v0.7 //
-////////////////////////
-btcpWidget.version = 0.7;
+///////////////////////////
+// BTCP Widget - v1-beta //
+///////////////////////////
+btcpWidget.version = "v1-beta";
 
 // btcpWidget.scriptHost = "widget.btcprivate.org:8001"; // PRODUCTION
 btcpWidget.scriptHost = "widget.btcprivate.co:8001"; // BETA
-
-// Setup data for transaction
-btcpWidget.data = JSON.parse('{'+
-        '"id"          : "btcp_widget",'+
-        '"wallet"      : "'+address+'",'+
-        '"amount"      : "'+amount+'",'+
-        '"description" : "'+description+'"'+
-     '}');
 
 // Establish button data params
 btcpWidget.buttonData = "{{widgetData}}";
@@ -35,7 +27,7 @@ btcpWidget.approvalConfirmsNeeded = parseInt(btcpWidget.buttonData.split("_")[2]
 btcpWidget.approvalOnRecognition = parseInt(btcpWidget.approvalConfirmsNeeded,10) > 0 ? false : true;
 
 // Set explorer link, if user has paid enough and num of confirms
-btcpWidget.explorerLink = '<a href="https://explorer.btcprivate.org/address/'+address+'" target="_blank" style="text-decoration: none; color: #fff">[&gt;]</a>';
+btcpWidget.explorerLink = '<a href="https://explorer.btcprivate.org/address/'+btcpWidget.data.address+'" target="_blank" style="text-decoration: none; color: #fff">[&gt;]</a>';
 btcpWidget.paidEnough = false;
 btcpWidget.numConfirms = 0;
 
@@ -164,7 +156,7 @@ btcpWidget.getLocation = function(href) {
 };
 
 // Set URI
-btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.wallet)+
+btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.address)+
           '?amount='+encodeURI(btcpWidget.data.amount)+
           '&message='+encodeURI(btcpWidget.data.description);
 
@@ -375,13 +367,13 @@ btcpWidget.showPaymentScreen = function(anim) {
     w.style.fontSize = "12px";
     w.style.color = "#fff";
     w.style.background = "#111";
-    w.innerHTML = btcpWidget.data.wallet;
+    w.innerHTML = btcpWidget.data.address;
 
     // Wallet input (out of view, for clipboard copy purposes)
     var wI = document.createElement("input");
     wI.id = "walletAddressInput";
     wI.type = "text";
-    wI.value = btcpWidget.data.wallet;
+    wI.value = btcpWidget.data.address;
     wI.style.position = "absolute";
     wI.style.top = "-1000px";
 
@@ -531,7 +523,7 @@ btcpWidget.showMerchantSupportScreen = function(anim) {
     // Heading and version
     var m = document.createElement("div");
     m.style.margin = "0 auto";
-    m.innerHTML = 'Merchant Support<br><br>Widget Version v'+btcpWidget.version;
+    m.innerHTML = 'Merchant Support<br><br>Widget Version '+btcpWidget.version;
 
     // Setup into button
     var dS = btcpWidget.returnButton();
@@ -723,7 +715,7 @@ btcpWidget.incrLogoRightClicks = function(e) {
 btcpWidget.getSetupInfo = function() {
     var date = new Date();
     var info = "<pre>"+
-               "=============================\n=== BTCP Merchant Support ===\n===  Widget version v"+btcpWidget.version+"  ===\n===   Vendor Setup Info   ===\n=============================\n\n"+date+"\n\n\n\n"+
+               "==============================\n=== BTCP Merchant Support  ===\n=== Widget version "+btcpWidget.version+" ===\n===   Vendor Setup Info    ===\n==============================\n\n"+date+"\n\n\n\n"+
                "==========================\nbtcp_widget_data innerHTML\n==========================\n\n"+get('btcp_widget_data').innerHTML+"\n\n\n\n"+
                "===================\n"+btcpWidget.data.id+" script src\n===================\n\n"+get(btcpWidget.data.id).src+"\n\n\n\n"+
                "================\nnavigator object\n================\n\n"+btcpWidget.navigatorProperties()+"\n\n\n\n"+
@@ -770,12 +762,12 @@ btcpWidget.processPayment = function() {
         // Unsubsribe from websockets
         socket.emit('unsubscribe', 'bitcoind/hashblock');
         socket.emit('unsubscribe', 'bitcoind/rawtransaction');
-        socket.emit('unsubscribe', 'bitcoind/addresstxid', [btcpWidget.data.wallet]);
+        socket.emit('unsubscribe', 'bitcoind/addresstxid', [btcpWidget.data.address]);
 
         // Setup a JSON response
         var jsonResponse = '{'+
                 '"result" : "success",'+
-                '"address" : "'+btcpWidget.data.wallet+'",'+
+                '"address" : "'+btcpWidget.data.address+'",'+
                 '"txid" : "'+btcpWidget.txID+'",'+
                 '"transactionRef" : "'+btcpWidget.transactionRef+'",'+
                 '"confirms" : '+btcpWidget.numConfirms+
@@ -840,20 +832,20 @@ document.body.insertAdjacentElement('afterend',btcpWidget.cA);
 // On document load
 btcpWidget.startSocketsSubscriptions = function() {
     // Set modal displayed wallet address
-    get("wallet").innerHTML = address;
+    get("wallet").innerHTML = btcpWidget.data.address;
     // Require bitcore, setup the websocket
     bitcore = require('bitcore-lib-btcp');
     socket = io('http://'+btcpWidget.scriptHost);
     // Subscribe to hashblock, rawtransaction and addresstxid channels
     socket.emit('subscribe', 'bitcoind/hashblock');
     socket.emit('subscribe', 'bitcoind/rawtransaction');
-    socket.emit('subscribe', 'bitcoind/addresstxid', [address]);
+    socket.emit('subscribe', 'bitcoind/addresstxid', [btcpWidget.data.address]);
 
     // addresstxid subscription response
     socket.on('bitcoind/addresstxid', function(data) {
       // Get and confirm address
       var bitcoreAddress = bitcore.Address(data.address);
-      if (bitcoreAddress.toString() == address && btcpWidget.paidEnough) {
+      if (bitcoreAddress.toString() == btcpWidget.data.address && btcpWidget.paidEnough) {
           // Set transaction ID and update progress info
           btcpWidget.txID = data.txid;
           btcpWidget.displayProcessingMessage();
@@ -870,7 +862,7 @@ btcpWidget.startSocketsSubscriptions = function() {
         var o = bitcore.Transaction(transactionHex).outputs;
         // Cycle through and find our address in that tx block
         for (var i=0; i<o.length; i++) {
-            if (bitcore.Address.fromScript(bitcore.Script.fromBuffer(o[i]._scriptBuffer)).toString() == address) {
+            if (bitcore.Address.fromScript(bitcore.Script.fromBuffer(o[i]._scriptBuffer)).toString() == btcpWidget.data.address) {
                 // Check user has paid correct amount
                 // Paid too little (5000 sats or less under required amount)
                 if (o[i].satoshis < btcpWidget.amountToPay * (100000000 - 5000)) {
@@ -883,7 +875,7 @@ btcpWidget.startSocketsSubscriptions = function() {
                     get('orderProgressInfo').innerHTML = "Please pay remaining:<br>"+btcpWidget.amountToPay+" BTCP to continue ";
                     get('payAmountText').innerHTML = 'Please pay <b>'+btcpWidget.amountToPay+' BTCP</b> to wallet:'
                     // Set new URI
-                    btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.wallet)+
+                    btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.address)+
                         '?amount='+btcpWidget.amountToPay+
                         '&message='+encodeURI(btcpWidget.data.description);
                     // Apply that to button and QR code
