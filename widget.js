@@ -3,8 +3,8 @@
 ///////////////////////////
 btcpWidget.version = "v1-beta";
 
-// btcpWidget.scriptHost = "widget.btcprivate.org:8001"; // PRODUCTION
-btcpWidget.scriptHost = "widget.btcprivate.co:8001"; // BETA
+btcpWidget.scriptHost = "ec2-54-186-227-180.us-west-2.compute.amazonaws.com:8001";
+btcpWidget.newAddressEndpoint = "https://btcppay.com/api/get-wallet-address";
 
 // Establish button data params
 btcpWidget.buttonData = "{{widgetData}}";
@@ -26,8 +26,7 @@ btcpWidget.buttonStyleNumber = parseInt(btcpWidget.buttonStyle.split("")[1],10);
 btcpWidget.approvalConfirmsNeeded = parseInt(btcpWidget.buttonData.split("_")[2],10);
 btcpWidget.approvalOnRecognition = parseInt(btcpWidget.approvalConfirmsNeeded,10) > 0 ? false : true;
 
-// Set explorer link, if user has paid enough and num of confirms
-btcpWidget.explorerLink = '<a href="https://explorer.btcprivate.org/address/'+btcpWidget.data.address+'" target="_blank" style="text-decoration: none; color: #fff">[&gt;]</a>';
+// Set if user has paid enough and num of confirms
 btcpWidget.paidEnough = false;
 btcpWidget.numConfirms = 0;
 
@@ -156,7 +155,7 @@ btcpWidget.getLocation = function(href) {
 };
 
 // Set URI
-btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.address)+
+btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
           '?amount='+encodeURI(btcpWidget.data.amount)+
           '&message='+encodeURI(btcpWidget.data.description);
 
@@ -209,8 +208,8 @@ var get = function(elem) {
 }
 
 // Set tooltip styles and add to webpage
-toolTipStyles = '.tooltip {position: relative; display: inline-block;} .tooltip .tooltiptext {visibility: hidden; width: 140px; background-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+'; color: #fff; text-align: center; border-radius: 5px; padding: 5px; position: absolute; z-index: 1; bottom: 150%; left: 50%; margin-left: -75px; opacity: 0; transition: opacity 0.3s;} .tooltip .tooltiptext::after {content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+' transparent transparent transparent;} .tooltip:hover .tooltiptext {visibility: visible; opacity: 1;}';
-document.body.innerHTML += '<style>'+toolTipStyles+'</style>';
+btcpWidgetStyles = '.tooltip {position: relative; display: inline-block;} .tooltip .tooltiptext {visibility: hidden; width: 140px; background-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+'; color: #fff; text-align: center; border-radius: 5px; padding: 5px; position: absolute; z-index: 1; bottom: 150%; left: 50%; margin-left: -75px; opacity: 0; transition: opacity 0.3s;} .tooltip .tooltiptext::after {content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+' transparent transparent transparent;} .tooltip:hover .tooltiptext {visibility: visible; opacity: 1;}';
+document.body.innerHTML += '<style>'+btcpWidgetStyles+'</style>';
 
 // Create widget button within an IIFE
 (function() {
@@ -344,8 +343,39 @@ btcpWidget.returnScreenHeading = function() {
     return {'overlay':o,'closeLink':c,'logo':l};
 }
 
-// Display/refresh payment screen on demand and in animation style requested
+// This kicks off the request to show payment screen on demand and in animation style requested
+// Calls upon displayPaymentScreen after establishing address and socket if we don't have them yet
 btcpWidget.showPaymentScreen = function(anim) {
+
+    // Get wallet address if we don't have one yet
+    if (!btcpWidget.data.address) {
+        fetch(btcpWidget.newAddressEndpoint, {method: 'post'})
+        .then(response => response.json())
+        .then(data => {
+            // Get widget address
+            btcpWidget.data.address = data.widgetAddress;
+
+            // Set various items that make use of address
+            btcpWidget.explorerLink = '<a href="https://explorer.btcprivate.org/address/'+btcpWidget.data.address+'" target="_blank" style="text-decoration: none; color: #fff">[&gt;]</a>';
+            btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
+              '?amount='+encodeURI(btcpWidget.data.amount)+
+              '&message='+encodeURI(btcpWidget.data.description);
+
+            // Start our socket subscriptions
+            btcpWidget.startSocketsSubscriptions();
+
+            // Then display payment screen
+            btcpWidget.displayPaymentScreen(anim);
+        })
+        .catch(function(err) {alert("Error getting wallet address, please close modal and click button to try again.\n\nError: "+err)});
+    } else {
+      // Just display payment screen
+      btcpWidget.displayPaymentScreen(anim);
+    }
+}
+
+// Display/refresh payment screen on demand and in animation style requested
+btcpWidget.displayPaymentScreen = function(anim) {
     // Get heading
     var
     h = btcpWidget.returnScreenHeading(),
@@ -359,10 +389,17 @@ btcpWidget.showPaymentScreen = function(anim) {
     p.style.margin = "0 auto";
     p.innerHTML = 'Please pay <b>'+btcpWidget.data.amount+' BTCP</b> to wallet:';
 
+    // Wallet address & clipboard container
+    var wC = document.createElement("div");
+    wC.style.position = "relative";
+    wC.style.display = "block";
+
     // Wallet address
     var w = document.createElement("span");
     w.id = "walletAddress";
     w.className = "walletAddress";
+    w.style.position = "relative";
+    w.style.top = "13px";
     w.style.padding = "10px";
     w.style.fontSize = "12px";
     w.style.color = "#fff";
@@ -380,6 +417,7 @@ btcpWidget.showPaymentScreen = function(anim) {
     // Clipboard tooltip
     var cT = document.createElement("div");
     cT.id = "clipboardTooltip";
+    cT.position = "absolute"
     cT.className = "tooltip";
     cT.style.margin = "0 auto 24px auto";
 
@@ -409,13 +447,13 @@ btcpWidget.showPaymentScreen = function(anim) {
     c.style.width = "23px";
     c.style.height = "23px";
     c.style.background = 'url(\'data:image/svg+xml;charset=UTF-8,'+clipboardIcon+'\') no-repeat 0 0';
-	c.style.backgroundSize = '20px 20px';
+    c.style.backgroundSize = '20px 20px';
     c.style.cursor = "pointer";
 
     // Wallet button
     var wB = btcpWidget.returnButton();
     wB.id = "walletButton";
-    wB.style.width = "176px";
+    wB.style.width = "196px";
     wB.innerHTML = "Pay via BTCP wallet";
     wB.href = btcpWidget.btcpURI;
 
@@ -486,8 +524,12 @@ btcpWidget.showPaymentScreen = function(anim) {
     cL.appendChild(c);
     cT.appendChild(cL);
 
+    // Put wallet and clipboard items into container
+    wC.appendChild(w);
+    wC.appendChild(cT);
+
     // Add all the children to overlay
-    for (var i=0, c=[d,l,p,w,wI,cT,wB,wW,wG,qH,qE,t,oP,oI,hL]; i<c.length; i++) {
+    for (var i=0, c=[d,l,p,wC,wI,wB,wW,wG,qH,qE,t,oP,oI,hL]; i<c.length; i++) {
         o.appendChild(c[i]);
     }
 
@@ -600,6 +642,7 @@ btcpWidget.doOverlay = function(vis) {
     // Get window height and top position of modal display on overlay
     var winH = window.innerHeight;
     var topH = (winH - 505) / 2;
+
     // Show
     if (vis === "show") {
         // Slide modal into view with a bounce while fading in black wash background
@@ -809,13 +852,14 @@ btcpWidget.displayProcessingMessage = function() {
 // socket.io
 btcpWidget.script = document.createElement('script');
 btcpWidget.script.type = 'text/javascript';
-btcpWidget.script.src = '//'+btcpWidget.scriptHost+'/socket.io/socket.io.js';
+btcpWidget.script.src = 'http://'+btcpWidget.scriptHost+'/socket.io/socket.io.js';
 document.getElementsByTagName('head')[0].appendChild(btcpWidget.script);
 
 // Bitcore
 btcpWidget.script = document.createElement('script');
 btcpWidget.script.type = 'text/javascript';
-btcpWidget.script.src = '//'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib-btcp/bitcore-lib-btcp.js';
+btcpWidget.script.src = 'http://'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib/bitcore-lib.js';
+// btcpWidget.script.src = '//'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib/bitcore-lib.min.js';
 document.getElementsByTagName('head')[0].appendChild(btcpWidget.script);
 
 // Clipboard address
@@ -834,7 +878,7 @@ btcpWidget.startSocketsSubscriptions = function() {
     // Set modal displayed wallet address
     get("wallet").innerHTML = btcpWidget.data.address;
     // Require bitcore, setup the websocket
-    bitcore = require('bitcore-lib-btcp');
+    bitcore = require('bitcore-lib');
     socket = io('http://'+btcpWidget.scriptHost);
     // Subscribe to hashblock, rawtransaction and addresstxid channels
     socket.emit('subscribe', 'bitcoind/hashblock');
@@ -875,7 +919,7 @@ btcpWidget.startSocketsSubscriptions = function() {
                     get('orderProgressInfo').innerHTML = "Please pay remaining:<br>"+btcpWidget.amountToPay+" BTCP to continue ";
                     get('payAmountText').innerHTML = 'Please pay <b>'+btcpWidget.amountToPay+' BTCP</b> to wallet:'
                     // Set new URI
-                    btcpWidget.btcpURI = 'bitcoin:'+encodeURI(btcpWidget.data.address)+
+                    btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
                         '?amount='+btcpWidget.amountToPay+
                         '&message='+encodeURI(btcpWidget.data.description);
                     // Apply that to button and QR code
@@ -918,10 +962,3 @@ btcpWidget.startSocketsSubscriptions = function() {
         }
     });
 };
-
-// Setup sockets and start subscriptions
-if(window.addEventListener){
-  window.addEventListener('load', btcpWidget.startSocketsSubscriptions)
-} else {
-  window.attachEvent('onload', btcpWidget.startSocketsSubscriptions)
-}
