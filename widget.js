@@ -3,8 +3,9 @@
 ///////////////////////////
 btcpWidget.version = "v1-beta";
 
-btcpWidget.scriptHost = "ec2-54-186-227-180.us-west-2.compute.amazonaws.com:8001";
-btcpWidget.newAddressEndpoint = "https://btcppay.com/api/get-wallet-address";
+btcpWidget.scriptHost = "ec2-54-200-163-211.us-west-2.compute.amazonaws.com:8001";
+//btcpWidget.newAddressEndpoint = "//btcppay.com/api/get-wallet-address";
+btcpWidget.newAddressEndpoint = "//portal.local/api/get-wallet-address";
 
 // Establish button data params
 btcpWidget.buttonData = "{{widgetData}}";
@@ -349,7 +350,7 @@ btcpWidget.showPaymentScreen = function(anim) {
 
     // Get wallet address if we don't have one yet
     if (!btcpWidget.data.address) {
-        fetch(btcpWidget.newAddressEndpoint, {method: 'post'})
+        fetch(btcpWidget.newAddressEndpoint, {method: 'get'})
         .then(response => response.json())
         .then(data => {
             // Get widget address
