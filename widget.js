@@ -349,7 +349,7 @@ btcpWidget.showPaymentScreen = function(anim) {
 
     // Get wallet address if we don't have one yet
     if (!btcpWidget.data.address) {
-        fetch(btcpWidget.newAddressEndpoint+"&merchantID="+btcpWidget.data.merchantid, {method: 'get'})
+        fetch(btcpWidget.newAddressEndpoint+"?merchantID="+btcpWidget.data.merchantid, {method: 'get'})
         .then(response => response.json())
         .then(data => {
             // Get widget address
