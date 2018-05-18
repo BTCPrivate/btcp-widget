@@ -3,9 +3,8 @@
 ///////////////////////////
 btcpWidget.version = "v1-beta";
 
-btcpWidget.scriptHost = "ec2-54-200-163-211.us-west-2.compute.amazonaws.com:8001";
-//btcpWidget.newAddressEndpoint = "//btcppay.com/api/get-wallet-address";
-btcpWidget.newAddressEndpoint = "//portal.local/api/get-wallet-address";
+btcpWidget.scriptHost = "widget.btcppay.com:8001";
+btcpWidget.newAddressEndpoint = "https://btcppay.com/api/get-wallet-address";
 
 // Establish button data params
 btcpWidget.buttonData = "{{widgetData}}";
@@ -853,14 +852,13 @@ btcpWidget.displayProcessingMessage = function() {
 // socket.io
 btcpWidget.script = document.createElement('script');
 btcpWidget.script.type = 'text/javascript';
-btcpWidget.script.src = 'http://'+btcpWidget.scriptHost+'/socket.io/socket.io.js';
+btcpWidget.script.src = 'https://'+btcpWidget.scriptHost+'/socket.io/socket.io.js';
 document.getElementsByTagName('head')[0].appendChild(btcpWidget.script);
 
 // Bitcore
 btcpWidget.script = document.createElement('script');
 btcpWidget.script.type = 'text/javascript';
-btcpWidget.script.src = 'http://'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib/bitcore-lib.js';
-// btcpWidget.script.src = '//'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib/bitcore-lib.min.js';
+btcpWidget.script.src = 'https://'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib/bitcore-lib.min.js';
 document.getElementsByTagName('head')[0].appendChild(btcpWidget.script);
 
 // Clipboard address
