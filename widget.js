@@ -878,7 +878,7 @@ btcpWidget.startSocketsSubscriptions = function() {
     get("wallet").innerHTML = btcpWidget.data.address;
     // Require bitcore, setup the websocket
     bitcore = require('bitcore-lib');
-    socket = io('http://'+btcpWidget.scriptHost);
+    socket = io('//'+btcpWidget.scriptHost);
     // Subscribe to hashblock, rawtransaction and addresstxid channels
     socket.emit('subscribe', 'bitcoind/hashblock');
     socket.emit('subscribe', 'bitcoind/rawtransaction');
