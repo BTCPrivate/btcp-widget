@@ -3,7 +3,7 @@
 ///////////////////////////
 btcpWidget.version = "v1-beta";
 
-btcpWidget.scriptHost = "btcppay.com";
+btcpWidget.scriptHost = "widget.btcppay.com";
 btcpWidget.newAddressEndpoint = "https://btcppay.com/api/get-wallet-address";
 
 // Establish button data params
@@ -858,7 +858,7 @@ document.getElementsByTagName('head')[0].appendChild(btcpWidget.script);
 // Bitcore
 btcpWidget.script = document.createElement('script');
 btcpWidget.script.type = 'text/javascript';
-btcpWidget.script.src = 'https://'+btcpWidget.scriptHost+'/bitcore-lib/bitcore-lib.min.js';
+btcpWidget.script.src = 'https://'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib/bitcore-lib.min.js';
 document.getElementsByTagName('head')[0].appendChild(btcpWidget.script);
 
 // Clipboard address
