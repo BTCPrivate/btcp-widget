@@ -23,6 +23,8 @@ https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/AccessingInstances.html
 ## Sync'ing blockchain and starting Bitcore service
 - The server comes with most of the blockchain ready downloaded for you, so just need to start the service to sync up to current blockheight and continually check for new transactions:
 - `cd ~/btcp-explorer; nvm use v4; ./node_modules/bitcore-node-btcp/bin/bitcore-node start`
+- If you wish to clear the Mongo DB and start afresh this can be done using:
+- `sudo killall mongod; sudo rm -rf /data/db; sudo mkdir -p /data/db; sudo mongod &`
 
 ## Using BTCP Explorer:
 - View explorer at **http://((server_ip)):8001**
