@@ -4,8 +4,8 @@
 btcpWidget.version = "v1-beta";
 
 btcpWidget.scriptHost = "widget.btcppay.com";
-btcpWidget.newAddressEndpoint = "//btcppay.com/api/get-wallet-address";
-btcpWidget.serverNotifyEndpoint = "//btcppay.com/api/save-confirmation";
+btcpWidget.newAddressEndpoint = "https://btcppay.com/api/get-wallet-address";
+btcpWidget.serverNotifyEndpoint = "https://btcppay.com/api/save-confirmation";
 
 // Establish button data params
 btcpWidget.buttonData = btcpWidget.data.buttonData;
@@ -875,13 +875,13 @@ btcpWidget.postServerNotification = function(data) {
 // socket.io
 btcpWidget.script = document.createElement('script');
 btcpWidget.script.type = 'text/javascript';
-btcpWidget.script.src = '//'+btcpWidget.scriptHost+'/socket.io/socket.io.js';
+btcpWidget.script.src = 'https://'+btcpWidget.scriptHost+'/socket.io/socket.io.js';
 document.getElementsByTagName('head')[0].appendChild(btcpWidget.script);
 
 // Bitcore
 btcpWidget.script = document.createElement('script');
 btcpWidget.script.type = 'text/javascript';
-btcpWidget.script.src = '//'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib/bitcore-lib.js';
+btcpWidget.script.src = 'https://'+btcpWidget.scriptHost+'/store-demo/js/bitcore-lib/bitcore-lib.js';
 document.getElementsByTagName('head')[0].appendChild(btcpWidget.script);
 
 // Clipboard address
@@ -901,7 +901,7 @@ btcpWidget.startSocketsSubscriptions = function() {
     get("wallet").innerHTML = btcpWidget.data.address;
     // Require bitcore, setup the websocket
     bitcore = require('bitcore-lib');
-    socket = io('//'+btcpWidget.scriptHost);
+    socket = io('https://'+btcpWidget.scriptHost);
     // Subscribe to hashblock, rawtransaction and addresstxid channels
     socket.emit('subscribe', 'bitcoind/hashblock');
     socket.emit('subscribe', 'bitcoind/rawtransaction');
