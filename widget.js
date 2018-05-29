@@ -22,12 +22,12 @@ btcpWidget.buttonStyleNumber = parseInt(btcpWidget.buttonStyle.split("")[1],10);
 btcpWidget.approvalConfirmsNeeded = parseInt(btcpWidget.buttonData.split("_")[2],10);
 btcpWidget.approvalOnRecognition = parseInt(btcpWidget.approvalConfirmsNeeded,10) > 0 ? false : true;
 
-
-
-
 // Set if user has paid enough and num of confirms
 btcpWidget.paidEnough = false;
 btcpWidget.numConfirms = 0;
+
+// Set lock to avoid showing & triggering dup payment setup
+btcpWidget.showPaymentScreenLockOn = false;
 
 // Set ID
 btcpWidget.id = btcpWidget.data.id;
@@ -264,7 +264,13 @@ document.body.innerHTML += '<style>'+btcpWidgetStyles+'</style>';
     // Set button text
     btcpWidget.widget.innerHTML = (btcpWidget.buttonType === "buy" ? maybeNBSPIndent1+"BUY"+maybeLineBreak+"WITH" : "DONATE"+maybeLineBreak+maybeNBSPIndent2+"WITH");
     // Finally, make button clickable
-    btcpWidget.widget.onclick = function() {btcpWidget.paidEnough ? alert("Payment in progress, please wait") : btcpWidget.showPaymentScreen();}
+    btcpWidget.widget.onclick = function() {
+        if (!btcpWidget.showPaymentScreenLockOn) {
+            btcpWidget.paidEnough
+                ? alert("Payment in progress, please wait")
+                : btcpWidget.showPaymentScreen();
+        }
+    }
 })();
 
 // Copy wallet address and update tooltip to info user
@@ -310,7 +316,7 @@ btcpWidget.returnScreenHeading = function() {
     c.style.fontSize = "24px";
     c.style.color = "#555";
     c.style.cursor = "pointer";
-    c.onclick = function(){btcpWidget.paidEnough ? alert("Payment in progress, please wait") : btcpWidget.doOverlay('hide');};
+    c.onclick = function(){btcpWidget.paidEnough ? alert("Payment in progress, please wait") : btcpWidget.hidePaymentScreen('hide')};
     c.onmouseover = function(){this.style.color = '#ddd'};
     c.onmouseout = function(){this.style.color = '#555'};
     c.innerHTML = "x";
@@ -346,6 +352,9 @@ btcpWidget.returnScreenHeading = function() {
 // Calls upon displayPaymentScreen after establishing address and socket if we don't have them yet
 btcpWidget.showPaymentScreen = function(anim) {
 
+    // Set flag to avoid dup triggers
+    btcpWidget.showPaymentScreenLockOn = true;
+
     // Get wallet address if we don't have one yet
     if (!btcpWidget.data.address) {
         fetch(btcpWidget.newAddressEndpoint+"?merchantid="+btcpWidget.data.merchantid+"&walletid="+btcpWidget.data.walletid+"&itemid="+btcpWidget.data.itemid+"&description="+btcpWidget.data.description, {method: 'get'})
@@ -371,6 +380,12 @@ btcpWidget.showPaymentScreen = function(anim) {
         // Just display payment screen
         btcpWidget.displayPaymentScreen(anim);
     }
+}
+
+// Hide payment screen and remove lock
+btcpWidget.hidePaymentScreen = function() {
+    btcpWidget.doOverlay('hide');
+    btcpWidget.showPaymentScreenLockOn = false;
 }
 
 // Display/refresh payment screen on demand and in animation style requested
