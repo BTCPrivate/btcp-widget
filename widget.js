@@ -1,7 +1,7 @@
 ///////////////////////////
 // BTCP Widget - v1-beta //
 ///////////////////////////
-btcpWidget.version = "v1-beta";
+btcpWidget.version = "v1-beta-closed";
 
 btcpWidget.scriptHost = "widget.btcppay.com";
 btcpWidget.newAddressEndpoint = "https://btcppay.com/api/get-wallet-address";
