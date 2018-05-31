@@ -493,8 +493,9 @@ btcpWidget.displayPaymentScreen = function(anim) {
     wW.style.textDecoration = "none";
     wW.innerHTML = "What is this?";
     wW.style.cursor = "pointer";
-    wW.onclick = function(){window.open("https://github.com/BTCPrivate/electrum-btcp");};
+    wW.onclick = function(){window.open("https://btcppay.com/wallets");};
 
+    // Wallet get
     var wG = document.createElement("a");
     wG.id = "walletGet";
     wG.style.fontSize = "10px";
@@ -503,20 +504,23 @@ btcpWidget.displayPaymentScreen = function(anim) {
     wG.style.margin = "0 0 20px 5px";
     wG.innerHTML = "Get it!";
     wG.style.cursor = "pointer";
-    wG.onclick = function(){window.open("https://github.com/BTCPrivate/electrum-btcp/releases/");};
+    wG.onclick = function(){window.open("https://btcppay.com/wallets");};
 
+    // QR code heading
     var qH = document.createElement("b");
     qH.id = "qrCodeHeading";
     qH.style.display = "block";
     qH.style.margin = "20px auto 10px auto";
     qH.innerHTML = "or by QR Code:";
 
+    // QR code
     var qE = document.createElement("canvas");
     qE.id = "qrCode";
     qE.style.display = "inline-block";
     qE.style.marginBottom = "20px";
     qE.style.background = "#fff";
 
+    // Transaction ref
     var t = document.createElement("div");
     t.id = "transactionRef";
     t.style.display = "none";
@@ -524,6 +528,7 @@ btcpWidget.displayPaymentScreen = function(anim) {
     t.style.margin = "5px auto 20px auto";
     t.innerHTML = "Transaction ref: "+btcpWidget.transactionRef;
 
+    // Order progress bar container
     var oP = document.createElement("div");
     oP.id = "orderProgressBarContainer";
     oP.style.display = "none";
@@ -533,12 +538,14 @@ btcpWidget.displayPaymentScreen = function(anim) {
     oP.style.background = "#888";
     oP.innerHTML = '<div id="orderProgressBar" style="display: inline-block; width: 0; background: #272d63; transition: all 0.5s ease-in-out">&nbsp;</div>';
 
+    // Order progress info
     var oI = document.createElement("b");
     oI.id = "orderProgressInfo";
     oI.style.display = "block";
     oI.style.marginBottom = "5px";
     oI.innerHTML = "Order completes after:<br>"+(btcpWidget.approvalOnRecognition ? "BTCP sent" : btcpWidget.approvalConfirmsNeeded+" confirmations");
 
+    // Help link
     var hL = document.createElement("a");
     hL.style.fontSize = "10px"
     hL.style.color = "#bbb";
@@ -875,7 +882,6 @@ btcpWidget.displayProcessingMessage = function() {
     }
 }
 
-
 // Post transaction data
 btcpWidget.postServerNotification = function(data) {
     // If txid is set, send data
@@ -899,8 +905,6 @@ btcpWidget.postServerNotification = function(data) {
     } else {
         console.log("No confirmation txid returned");
     }
-
-
 }
 
 // Load JS scripts and append clipboard copy helper input elem
