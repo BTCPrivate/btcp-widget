@@ -493,7 +493,7 @@ btcpWidget.displayPaymentScreen = function(anim) {
     wW.style.textDecoration = "none";
     wW.innerHTML = "What is this?";
     wW.style.cursor = "pointer";
-    wW.onclick = function(){window.open("https://btcppay.com/wallets");};
+    wW.onclick = function(){window.open("https://btcppay.com/btcp-wallets");};
 
     // Wallet get
     var wG = document.createElement("a");
@@ -504,7 +504,7 @@ btcpWidget.displayPaymentScreen = function(anim) {
     wG.style.margin = "0 0 20px 5px";
     wG.innerHTML = "Get it!";
     wG.style.cursor = "pointer";
-    wG.onclick = function(){window.open("https://btcppay.com/wallets");};
+    wG.onclick = function(){window.open("https://btcppay.com/btcp-wallets");};
 
     // QR code heading
     var qH = document.createElement("b");
