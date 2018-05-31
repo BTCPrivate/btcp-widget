@@ -360,25 +360,36 @@ btcpWidget.showPaymentScreen = function(anim) {
 
     // Get wallet address if we don't have one yet
     if (!btcpWidget.data.address) {
-        fetch(btcpWidget.newAddressEndpoint+"?merchantid="+btcpWidget.data.merchantid+"&walletid="+btcpWidget.data.walletid+"&itemid="+btcpWidget.data.itemid+"&description="+btcpWidget.data.description, {method: 'get'})
-            .then(response => response.json())
-            .then(data => {
-                // Get widget address
-                btcpWidget.data.address = data.widgetAddress;
+        fetch(btcpWidget.newAddressEndpoint, {
+            method: 'post',
+            headers: new Headers({
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            }),
+            body: "merchantid="+btcpWidget.data.merchantid+
+                  "&walletid="+btcpWidget.data.walletid+
+                  "&itemid="+btcpWidget.data.itemid+
+                  "&description="+btcpWidget.data.description+
+                  "&transactiondetails="+JSON.stringify(btcpWidget.data.transactiondetails)
+        })
 
-                // Set various items that make use of address
-                btcpWidget.explorerLink = '<a href="https://explorer.btcprivate.org/address/'+btcpWidget.data.address+'" target="_blank" style="position: relative; display: inline-block; width: 20px; height: 20px; top: 5px; background: url(\'data:image/svg+xml;base64,'+window.btoa(openLinkIcon)+'\') no-repeat 0 0; background-size: 20px 20px"></a>';
-                btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
-                    '?amount='+encodeURI(btcpWidget.data.amount)+
-                    '&message='+encodeURI(btcpWidget.data.description);
+        .then(response => response.json())
+        .then(data => {
+            // Get widget address
+            btcpWidget.data.address = data.widgetAddress;
 
-                // Start our socket subscriptions
-                btcpWidget.startSocketsSubscriptions();
+            // Set various items that make use of address
+            btcpWidget.explorerLink = '<a href="https://explorer.btcprivate.org/address/'+btcpWidget.data.address+'" target="_blank" style="position: relative; display: inline-block; width: 20px; height: 20px; top: 5px; background: url(\'data:image/svg+xml;base64,'+window.btoa(openLinkIcon)+'\') no-repeat 0 0; background-size: 20px 20px"></a>';
+            btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
+                '?amount='+encodeURI(btcpWidget.data.amount)+
+                '&message='+encodeURI(btcpWidget.data.description);
 
-                // Then display payment screen
-                btcpWidget.displayPaymentScreen(anim);
-            })
-            .catch(function(err) {alert("Error getting wallet address, please close modal and click button to try again.\n\nError: "+err)});
+            // Start our socket subscriptions
+            btcpWidget.startSocketsSubscriptions();
+
+            // Then display payment screen
+            btcpWidget.displayPaymentScreen(anim);
+        })
+        .catch(function(err) {alert("Error getting wallet address, please close modal and click button to try again.\n\nError: "+err)});
     } else {
         // Just display payment screen
         btcpWidget.displayPaymentScreen(anim);
@@ -865,22 +876,26 @@ btcpWidget.displayProcessingMessage = function() {
 }
 
 
-// Post transaction to BTCPPay.com for merchant to check payment status.
+// Post transaction data
 btcpWidget.postServerNotification = function(data) {
-    // Hide previous modals that were displayed
-    console.log("We will log this");
-    console.log(data);
-
-
-    // If txid is set calls erver
+    // If txid is set, send data
     if (data.txid) {
-        fetch(btcpWidget.serverNotifyEndpoint+"?merchant_id="+btcpWidget.data.merchantid+"&wallet_id="+btcpWidget.data.walletid+"&address="+data.address+"&txid="+data.txid, {method: 'get'})
-            .then(response => response.json())
-            .then(data => {
-                // TODO: some validation
-                console.log("confirmation saved");
-            })
-            .catch(function(err) {alert("Error saving transaction txid confirmation to server.\n\nError: "+err)});
+        fetch(btcpWidget.serverNotifyEndpoint, {
+            method: 'post',
+            headers: new Headers({
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+            }),
+            body: "?merchant_id="+btcpWidget.data.merchantid+
+                  "&wallet_id="+btcpWidget.data.walletid+
+                  "&address="+data.address+
+                  "&txid="+data.txid
+        })
+        .then(response => response.json())
+        .then(data => {
+            // TODO: some validation
+            console.log("confirmation saved");
+        })
+        .catch(function(err) {alert("Error saving transaction txid confirmation to server.\n\nError: "+err)});
     } else {
         console.log("No confirmation txid returned");
     }
