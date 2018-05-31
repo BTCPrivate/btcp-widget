@@ -885,7 +885,7 @@ btcpWidget.postServerNotification = function(data) {
             headers: new Headers({
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
             }),
-            body: "?merchant_id="+btcpWidget.data.merchantid+
+            body: "merchant_id="+btcpWidget.data.merchantid+
                   "&wallet_id="+btcpWidget.data.walletid+
                   "&address="+data.address+
                   "&txid="+data.txid
