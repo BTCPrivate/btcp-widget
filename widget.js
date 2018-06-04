@@ -210,7 +210,7 @@ var get = function(elem) {
 }
 
 // Set tooltip styles and add to webpage
-btcpWidgetStyles = '.tooltip {position: relative; display: inline-block;} .tooltip .tooltiptext {visibility: hidden; width: 140px; background-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+'; color: #fff; text-align: center; border-radius: 5px; padding: 5px; position: absolute; z-index: 1; bottom: 150%; left: 50%; margin-left: -75px; opacity: 0; transition: opacity 0.3s;} .tooltip .tooltiptext::after {content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+' transparent transparent transparent;} .tooltip:hover .tooltiptext {visibility: visible; opacity: 1;}';
+btcpWidgetStyles = '.btcpButtonOverlay * {vertical-align: baseline} .tooltip {position: relative; display: inline-block; vertical-align: baseline;} .tooltip .tooltiptext {visibility: hidden; width: 140px; background-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+'; color: #fff; text-align: center; border-radius: 5px; padding: 5px; position: absolute; z-index: 1; bottom: 135%; left: 50%; margin-left: -75px; opacity: 0; transition: opacity 0.3s;} .tooltip .tooltiptext::after {content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+' transparent transparent transparent;} .tooltip:hover .tooltiptext {visibility: visible; opacity: 1;}';
 document.body.innerHTML += '<style>'+btcpWidgetStyles+'</style>';
 
 // Create widget button within an IIFE
@@ -280,16 +280,16 @@ document.body.innerHTML += '<style>'+btcpWidgetStyles+'</style>';
 btcpWidget.copyAddress = function() {
     get("walletAddressInput").select();
     document.execCommand("Copy");
-    get("myTooltip").style.width = "70px";
-    get("myTooltip").style.marginLeft = "-40px";
-    get("myTooltip").innerHTML = "Copied!";
+    get("tooltipText").style.width = "70px";
+    get("tooltipText").style.marginLeft = "-40px";
+    get("tooltipText").innerHTML = "Copied!";
 }
 
 // Reset tooltip
 btcpWidget.resetTooltip = function() {
-    get("myTooltip").style.width = "140px";
-    get("myTooltip").style.marginLeft = "-75px";
-    get("myTooltip").innerHTML = "Copy to clipboard";
+    get("tooltipText").style.width = "140px";
+    get("tooltipText").style.marginLeft = "-75px";
+    get("tooltipText").innerHTML = "Copy to clipboard";
 }
 
 // Setup and return heading items shown in modal
@@ -297,6 +297,7 @@ btcpWidget.returnScreenHeading = function() {
     // Overlay
     var o = document.createElement("div");
     o.id = "btcpButtonOverlay";
+    o.className = "btcpButtonOverlay";
     o.style.position = "fixed";
     o.style.display = "block";
     o.style.width = "100%";
@@ -427,7 +428,6 @@ btcpWidget.displayPaymentScreen = function(anim) {
     w.id = "walletAddress";
     w.className = "walletAddress";
     w.style.position = "relative";
-    w.style.top = "13px";
     w.style.padding = "10px";
     w.style.fontSize = "12px";
     w.style.color = "#fff";
@@ -463,7 +463,7 @@ btcpWidget.displayPaymentScreen = function(anim) {
 
     // Clipboard tooltip text
     var cTT = document.createElement("span");
-    cTT.id = "myTooltip";
+    cTT.id = "tooltipText";
     cTT.className = "tooltiptext";
     cTT.innerHTML = "Copy to clipboard";
 
