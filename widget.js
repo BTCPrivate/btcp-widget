@@ -7,6 +7,11 @@ btcpWidget.scriptHost = "widget.btcppay.com";
 btcpWidget.newAddressEndpoint = "https://btcppay.com/api/get-wallet-address";
 btcpWidget.serverNotifyEndpoint = "https://btcppay.com/api/save-confirmation";
 
+// btcpWidget.smsPayNumber = "+13644444841";
+btcpWidget.smsPayNumber = "+41798071464";
+
+btcpWidget.mobileRegexString = new RegExp("/Mobile|iP(hone|od|ad)|Android|BlackBerry|IEMobile|Kindle|NetFront|Silk-Accelerated|(hpw|web)OS|Fennec|Minimo|Opera M(obi|ini)|Blazer|Dolfin|Dolphin|Skyfire|Zune/","gi");
+
 // Establish button data params
 btcpWidget.buttonData = btcpWidget.data.buttonData;
 // Setup a fallback
@@ -563,8 +568,26 @@ btcpWidget.displayPaymentScreen = function(anim) {
     wC.appendChild(w);
     wC.appendChild(cT);
 
+    // Mobile? Show Cointigo button instead of QR code (dH = dynamic header, dE = dynamic element)
+    console.log(navigator.userAgent);
+    if (navigator.userAgent.match(btcpWidget.mobileRegexString)) {
+        var dH = qH;
+        dH.id = "smsHeading";
+        dH.style.marginBottom = "0";
+        dH.innerHTML = "or by SMS payment:";
+        var dE = btcpWidget.returnButton();
+        dE.id = "smsButton";
+        dE.style.width = "196px";
+        dE.style.marginBottom = "10px";
+        dE.innerHTML = "Pay via Cointigo SMS";
+        dE.href = "sms:"+btcpWidget.smsPayNumber+"?body=SEND "+btcpWidget.data.amount+" BTCP "+btcpWidget.data.address;
+    } else {
+        var dH = qH;
+        var dE = qE;
+    }
+
     // Add all the children to overlay
-    for (var i=0, c=[d,l,p,wC,wI,wB,wW,wG,qH,qE,t,oP,oI,hL]; i<c.length; i++) {
+    for (var i=0, c=[d,l,p,wC,wI,wB,wW,wG,dH,dE,t,oP,oI,hL]; i<c.length; i++) {
         o.appendChild(c[i]);
     }
 
@@ -865,8 +888,14 @@ btcpWidget.displayProcessingMessage = function() {
     get('walletButton').style.display = "none";
     get('walletWhat').style.display = "none";
     get('walletGet').style.display = "none";
-    get('qrCodeHeading').style.display = "none";
-    get('qrCode').style.display = "none";
+    if (get('qrCodeHeading')) {
+        get('qrCodeHeading').style.display = "none";
+        get('qrCode').style.display = "none";
+    }
+    if (get('smsHeading')) {
+        get('smsHeading').style.display = "none";
+        get('smsButton').style.display = "none";
+    }
     // Display transaction ref, progress bar and message
     get('transactionRef').style.display = "block";
     get('orderProgressBarContainer').style.display = "block";
