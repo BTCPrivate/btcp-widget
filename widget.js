@@ -211,7 +211,7 @@ var get = function(elem) {
 
 // Set tooltip styles and add to webpage
 btcpWidgetStyles = '.btcpButtonOverlay * {vertical-align: baseline} .tooltip {position: relative; display: inline-block; vertical-align: baseline;} .tooltip .tooltiptext {visibility: hidden; width: 140px; background-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+'; color: #fff; text-align: center; border-radius: 5px; padding: 5px; position: absolute; z-index: 1; bottom: 135%; left: 50%; margin-left: -75px; opacity: 0; transition: opacity 0.3s;} .tooltip .tooltiptext::after {content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: '+btcpWidget.buttonStyles[btcpWidget.buttonStyle]['background']+' transparent transparent transparent;} .tooltip:hover .tooltiptext {visibility: visible; opacity: 1;}';
-document.body.innerHTML += '<style>'+btcpWidgetStyles+'</style>';
+document.getElementsByTagName('head')[0].innerHTML += '<style>'+btcpWidgetStyles+'</style>';
 
 // Create widget button within an IIFE
 (function() {
@@ -724,7 +724,9 @@ btcpWidget.doOverlay = function(vis) {
 }
 
 // Add widget to merchants site where JS script is included
-get(btcpWidget.id).insertAdjacentElement('afterend',btcpWidget.widget);
+if (btcpWidget.hideButton) {
+    get(btcpWidget.id).insertAdjacentElement('afterend',btcpWidget.widget);
+}
 
 // Handle socket comms for order confirmation response
 btcpWidget.handlePaymentResponse = function(data) {
