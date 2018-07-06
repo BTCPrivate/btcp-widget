@@ -26,6 +26,8 @@ btcpWidget.approvalOnRecognition = parseInt(btcpWidget.approvalConfirmsNeeded,10
 btcpWidget.paidEnough = false;
 btcpWidget.numConfirms = 0;
 
+const btcpChargeAmount = btcpWidget.data.amount;
+
 // Set lock to avoid showing & triggering dup payment setup
 btcpWidget.showPaymentScreenLockOn = false;
 
@@ -155,7 +157,7 @@ btcpWidget.getLocation = function(href) {
 
 // Set URI
 btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
-    '?amount='+encodeURI(btcpWidget.data.amount)+
+    '?amount='+encodeURI(btcpChargeAmount)+
     '&message='+encodeURI(btcpWidget.data.description);
 
 // QRious v4.0.2 : https://github.com/neocotic/qrious : see repo for license: GPLv3 license
@@ -381,7 +383,7 @@ btcpWidget.showPaymentScreen = function(anim) {
             // Set various items that make use of address
             btcpWidget.explorerLink = '<a href="https://explorer.btcprivate.org/address/'+btcpWidget.data.address+'" target="_blank" style="position: relative; display: inline-block; width: 20px; height: 20px; top: 5px; background: url(\'data:image/svg+xml;base64,'+window.btoa(openLinkIcon)+'\') no-repeat 0 0; background-size: 20px 20px"></a>';
             btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
-                '?amount='+encodeURI(btcpWidget.data.amount)+
+                '?amount='+encodeURI(btcpChargeAmount)+
                 '&message='+encodeURI(btcpWidget.data.description);
 
             // Start our socket subscriptions
@@ -416,7 +418,7 @@ btcpWidget.displayPaymentScreen = function(anim) {
     var p = document.createElement("div");
     p.id = "payAmountText";
     p.style.margin = "0 auto";
-    p.innerHTML = 'Please pay <b>'+btcpWidget.data.amount+' BTCP</b> to wallet:';
+    p.innerHTML = 'Please pay <b>'+btcpChargeAmount+' BTCP</b> to wallet:';
 
     // Wallet address & clipboard container
     var wC = document.createElement("div");
@@ -962,7 +964,7 @@ btcpWidget.startSocketsSubscriptions = function() {
     socket.on('bitcoind/rawtransaction', function(transactionHex) {
         // Set amount remaining to pay, all it not set as yet
         if ("undefined" == typeof btcpWidget.amountToPay) {
-            btcpWidget.amountToPay = btcpWidget.data.amount;
+            btcpWidget.amountToPay = btcpChargeAmount;
         }
         // Get outputs from tx hex
         var o = bitcore.Transaction(transactionHex).outputs;
