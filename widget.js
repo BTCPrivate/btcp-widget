@@ -724,7 +724,7 @@ btcpWidget.doOverlay = function(vis) {
 }
 
 // Add widget to merchants site where JS script is included
-if (btcpWidget.hideButton) {
+if (!btcpWidget.data.hideButton) {
     get(btcpWidget.id).insertAdjacentElement('afterend',btcpWidget.widget);
 }
 
