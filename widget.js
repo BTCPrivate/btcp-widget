@@ -26,7 +26,53 @@ btcpWidget.approvalOnRecognition = parseInt(btcpWidget.approvalConfirmsNeeded,10
 btcpWidget.paidEnough = false;
 btcpWidget.numConfirms = 0;
 
-const btcpChargeAmount = btcpWidget.data.amount;
+// Set fiat currencies that are available to specify amount in
+btcpWidget.currencies = ["AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR", "JPY",
+                         "KRW", "MXN", "MYR", "NOK", "NZD", "PHP", "PKR", "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD", "USD", "ZAR"];
+
+// Set URI
+btcpWidget.setURI = function() {
+    btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
+    '?amount='+encodeURI(btcpWidget.chargeAmount)+
+    '&message='+encodeURI(btcpWidget.data.description);
+};
+
+// If a currency is specified and it's not BTCP
+if (btcpWidget.data.currency && btcpWidget.data.currency !== "BTCP") {
+    // If the currency specified is in the accepted list
+    if (btcpWidget.currencies.indexOf(btcpWidget.data.currency) > -1) {
+        // Get BTCP price in specified currency (USD is default)
+        fetch('https://api.coinmarketcap.com/v2/ticker/2575/'+(
+            btcpWidget.data.currency != "USD"
+                ? "?convert="+btcpWidget.data.currency
+                : ""
+        ))
+        // Get response in JSON and then data
+        .then(response => response.json())
+        .then(data => {
+            // Establish 1 BTCP in chosen currency and order value in that currency
+            var oneBTCPCurrencyValue = data.data.quotes[btcpWidget.data.currency].price;
+            var btcpOrderValue = btcpWidget.data.amount/oneBTCPCurrencyValue;
+            // Set our value to a max of 8 decimal places
+            btcpWidget.chargeAmount = Math.round(btcpOrderValue * 100000000) / 100000000;
+            // Set URI
+            btcpWidget.setURI();
+            // Finally set the fiat equivalent display
+            btcpWidget.fiatEquivalentDisplay = btcpWidget.data.amount + " " + btcpWidget.data.currency;
+        })
+        .catch(function(err) {
+            alert("BTCP Widget error:\nUnable to get price for your order");
+            console.error(err)
+        });
+    } else {
+        alert("BTCP Widget error:\nRequested currency not found. Must be one of the following:\n\n"+btcpWidget.currencies.join(", "));
+    }
+// Charge for order in BTCP currency
+} else {
+    btcpWidget.chargeAmount = btcpWidget.data.amount
+    // Set URI
+    btcpWidget.setURI();
+}
 
 // Set lock to avoid showing & triggering dup payment setup
 btcpWidget.showPaymentScreenLockOn = false;
@@ -155,10 +201,10 @@ btcpWidget.getLocation = function(href) {
     return l;
 };
 
-// Set URI
-btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
-    '?amount='+encodeURI(btcpChargeAmount)+
-    '&message='+encodeURI(btcpWidget.data.description);
+// Show/hide currencies block
+btcpWidget.showHideCurrencies = function(vis) {
+    get('btcpCurrencySymbols').style.height = vis == "show" ? "165px" : "0";
+};
 
 // QRious v4.0.2 : https://github.com/neocotic/qrious : see repo for license: GPLv3 license
 (function(w,t){"object"===typeof exports&&"undefined"!==typeof module?module.exports=t():"function"===typeof define&&define.amd?define(t):w.QRious=t()})(this,function(){function w(a,b){if("function"===typeof Object.create)var c=Object.create(a);else x.prototype=a,c=new x,x.prototype=null;b&&t(!0,c,b);return c}function t(a,b,c){c=A.call(arguments,2);for(var d,f,e=0,g=c.length;e<g;e++)for(d in f=c[e],f)if(!a||B.call(f,d))b[d]=f[d]}function k(){}var x=function(){},B=Object.prototype.hasOwnProperty,A=
@@ -382,9 +428,8 @@ btcpWidget.showPaymentScreen = function(anim) {
 
             // Set various items that make use of address
             btcpWidget.explorerLink = '<a href="https://explorer.btcprivate.org/address/'+btcpWidget.data.address+'" target="_blank" style="position: relative; display: inline-block; width: 20px; height: 20px; top: 5px; background: url(\'data:image/svg+xml;base64,'+window.btoa(openLinkIcon)+'\') no-repeat 0 0; background-size: 20px 20px"></a>';
-            btcpWidget.btcpURI = 'bitcoinprivate:'+encodeURI(btcpWidget.data.address)+
-                '?amount='+encodeURI(btcpChargeAmount)+
-                '&message='+encodeURI(btcpWidget.data.description);
+                // Set URI
+                btcpWidget.setURI();
 
             // Start our socket subscriptions
             btcpWidget.startSocketsSubscriptions();
@@ -405,6 +450,34 @@ btcpWidget.hidePaymentScreen = function() {
     btcpWidget.showPaymentScreenLockOn = false;
 }
 
+// Get fiat currency value and display it
+btcpWidget.getFiatCurrencyValue = function(currency) {
+    // If the currency specified is in the accepted list
+    if (btcpWidget.currencies.indexOf(btcpWidget.data.currency) > -1) {
+        // Get BTCP price in specified currency (USD is default)
+        fetch('https://api.coinmarketcap.com/v2/ticker/2575/'+(
+            currency != "USD"
+                ? "?convert="+currency
+                : ""
+        ))
+        // Get response in JSON and then data
+        .then(response => response.json())
+        .then(data => {
+            // Establish 1 BTCP in chosen currency and order value in that currency
+            var oneBTCPCurrencyValue = data.data.quotes[currency].price;
+            var btcpOrderValue = btcpWidget.chargeAmount*oneBTCPCurrencyValue;
+            // Finally set the fiat equivalent display
+            get('fiatValueDisplay').innerHTML = btcpOrderValue.toFixed(2) + " " + currency;
+        })
+        .catch(function(err) {
+            alert("BTCP Widget error:\nUnable to get price for your order");
+            console.error(err)
+        });
+    } else {
+        alert("BTCP Widget error:\nRequested currency not found. Must be one of the following:\n\n"+btcpWidget.currencies.join(", "));
+    }
+}
+
 // Display/refresh payment screen on demand and in animation style requested
 btcpWidget.displayPaymentScreen = function(anim) {
     // Get heading
@@ -414,11 +487,41 @@ btcpWidget.displayPaymentScreen = function(anim) {
         d = h['closeLink'],
         l = h['logo'];
 
+    // Fiat amount text
+    var f = document.createElement("div");
+    f.id = "fiatEquivalentDisplay";
+    f.style.display = "inline-block";
+    f.style.margin = "0 auto 20px auto";
+    f.style.color = "#bbb";
+    f.style.cursor = "default";
+    f.onmouseover = function() {btcpWidget.showHideCurrencies('show')};
+    f.onmouseout = function() {btcpWidget.showHideCurrencies('hide')};
+    f.innerHTML = 'undefined' != typeof btcpWidget.fiatEquivalentDisplay
+      ? 'Fiat value: <b id="fiatValueDisplay">'+btcpWidget.fiatEquivalentDisplay+"</b> - change"
+      : '';
+
+    // Currency symbols
+    var cS = document.createElement("div");
+    cS.id = "btcpCurrencySymbols";
+    cS.style.position = "relative";
+    cS.style.margin = "-20px auto 10px auto";
+    cS.style.width = "220px";
+    cS.style.height = "0";
+    cS.style.overflow = "hidden";
+    cS.style.background = "#080808";
+    cS.style.transition = "height 0.1s ease-in-out";
+    cS.onmouseover = function() {btcpWidget.showHideCurrencies('show')};
+    cS.onmouseout = function() {btcpWidget.showHideCurrencies('hide')};
+    var cSymbolDivStart = '<div style="display: inline-block; width: 50px; color: #888; cursor: pointer" onclick="btcpWidget.getFiatCurrencyValue(this.innerHTML)" onmouseover="this.style.color=\'#fff\'" onmouseout="this.style.color=\'#888\'">';
+    var cSymbolDivEnd = '</div>';
+    var cSymbols = cSymbolDivStart + btcpWidget.currencies.join(cSymbolDivEnd+cSymbolDivStart)+cSymbolDivEnd;
+    cS.innerHTML = '<div style="padding: 10px">'+cSymbols+'</div>';
+
     // Please pay text
     var p = document.createElement("div");
     p.id = "payAmountText";
-    p.style.margin = "0 auto";
-    p.innerHTML = 'Please pay <b>'+btcpChargeAmount+' BTCP</b> to wallet:';
+    p.style.margin = (btcpWidget.data.currency ? "20px" : "0")+" auto 10px auto";
+    p.innerHTML = 'Please pay <b>'+btcpWidget.chargeAmount+' BTCP</b> to wallet:';
 
     // Wallet address & clipboard container
     var wC = document.createElement("div");
@@ -433,7 +536,7 @@ btcpWidget.displayPaymentScreen = function(anim) {
     w.style.padding = "10px";
     w.style.fontSize = "12px";
     w.style.color = "#fff";
-    w.style.background = "#111";
+    w.style.background = "#080808";
     w.innerHTML = btcpWidget.data.address;
 
     // Wallet input (out of view, for clipboard copy purposes)
@@ -566,7 +669,7 @@ btcpWidget.displayPaymentScreen = function(anim) {
     wC.appendChild(cT);
 
     // Add all the children to overlay
-    for (var i=0, c=[d,l,p,wC,wI,wB,wW,wG,qH,qE,t,oP,oI,hL]; i<c.length; i++) {
+    for (var i=0, c=[d,l,f,cS,p,wC,wI,wB,wW,wG,qH,qE,t,oP,oI,hL]; i<c.length; i++) {
         o.appendChild(c[i]);
     }
 
@@ -964,7 +1067,7 @@ btcpWidget.startSocketsSubscriptions = function() {
     socket.on('bitcoind/rawtransaction', function(transactionHex) {
         // Set amount remaining to pay, all it not set as yet
         if ("undefined" == typeof btcpWidget.amountToPay) {
-            btcpWidget.amountToPay = btcpChargeAmount;
+            btcpWidget.amountToPay = btcpWidget.chargeAmount;
         }
         // Get outputs from tx hex
         var o = bitcore.Transaction(transactionHex).outputs;
