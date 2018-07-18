@@ -944,6 +944,9 @@ window.addEventListener("resize", function(event) {
 btcpWidget.processPayment = function() {
     // If we have a txID
     if ("undefined" != typeof btcpWidget.txID) {
+        // Return onbeforeunload object value to permit closing tab/window
+        btcpWidget.onBeforeUnloadHandler('unset');
+
         // Unsubsribe from websockets
         socket.emit('unsubscribe', 'bitcoind/hashblock');
         socket.emit('unsubscribe', 'bitcoind/rawtransaction');
@@ -1039,6 +1042,22 @@ btcpWidget.cA.innerHTML = '<div id="wallet"></div><button class="copyButton" id=
 // Attach just after body
 document.body.insertAdjacentElement('afterend',btcpWidget.cA);
 
+// Set/unset the onbeforeunload return
+btcpWidget.onBeforeUnloadHandler = function(setUnset) {
+    if (setUnset == "set") {
+        // Pickup previous object value
+        btcpWidget.prevOnBeforeUnload = window.onbeforeunload;
+        // Add unbeforeunload
+        window.onbeforeunload = function() {
+            return true;
+        }
+    }
+    if (setUnset == "unset") {
+        // Reset object value to what it was previously
+        window.onbeforeunload = btcpWidget.prevOnBeforeUnload;
+    }
+}
+
 // On document load
 btcpWidget.startSocketsSubscriptions = function() {
     // Set modal displayed wallet address
@@ -1092,7 +1111,7 @@ btcpWidget.startSocketsSubscriptions = function() {
                     // Apply that to button and QR code
                     get('walletButton').href = btcpWidget.btcpURI;
                     btcpWidget.generateQRCode(btcpWidget.btcpURI);
-                    // Paid too much (5000 sats or more under required amount)
+                // Paid too much (5000 sats or more under required amount)
                 } else if (o[i].satoshis > btcpWidget.amountToPay * (100000000 + 5000)) {
                     // Set amount overpaid and alert user
                     btcpWidget.amountToPay = ((o[i].satoshis / 100000000) - btcpWidget.amountToPay).toFixed(8) * 1;
@@ -1100,10 +1119,14 @@ btcpWidget.startSocketsSubscriptions = function() {
                     // Permit order to proceed
                     btcpWidget.paidEnough = true;
                     btcpWidget.displayProcessingMessage();
-                    // Paid roughly right amount
+                    // Warn against closing tab/window
+                    btcpWidget.onBeforeUnloadHandler('set');
+                // Paid roughly right amount
                 } else {
                     btcpWidget.paidEnough = true;
                     btcpWidget.displayProcessingMessage();
+                    // Warn against closing tab/window
+                    btcpWidget.onBeforeUnloadHandler('set');
                 }
                 break;
             }
