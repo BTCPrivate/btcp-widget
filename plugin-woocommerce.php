@@ -2,19 +2,14 @@
 /*
 Plugin Name: Bitcoin Private Payment Gateway
 Description: BTCPPay.com WooCommerce Payment Gateway Integration for payments with Bitcoin Private
-Author:
-Author URI:
+Author: J62 & Mattpass
 */
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly
 }
 
-/**
- * Custom Payment Gateway.
- *
- * Provides a Custom Payment Gateway, mainly for testing purposes.
- */
+
 add_action('plugins_loaded', 'init_custom_gateway_class');
 function init_custom_gateway_class()
 {
@@ -32,7 +27,7 @@ function init_custom_gateway_class()
 
             $this->domain = 'custom_payment';
 
-            $this->id                 = 'custom';
+            $this->id                 = 'bitcoin_private';
             $this->icon               = apply_filters('woocommerce_custom_gateway_icon', '');
             $this->has_fields         = false;
             $this->method_title       = __('Bitcoin Private', $this->domain);
@@ -45,6 +40,7 @@ function init_custom_gateway_class()
             // Define user set variables
             $this->title        = $this->get_option('title');
             $this->description  = $this->get_option('description');
+            $this->widget_code  = $this->get_option('widget_code');
             $this->instructions = $this->get_option('instructions', $this->description);
             $this->order_status = $this->get_option('order_status', 'completed');
 
@@ -75,7 +71,7 @@ function init_custom_gateway_class()
                 'enabled' => array(
                     'title' => __('Enable/Disable', $this->domain),
                     'type' => 'checkbox',
-                    'label' => __('Enable Custom Payment', $this->domain),
+                    'label' => __('Enable Bitcoin Private (BTCPPay.com) Custom Payment', $this->domain),
                     'default' => 'yes'
                 ),
                 'title' => array(
@@ -93,6 +89,13 @@ function init_custom_gateway_class()
                     'default' => 'wc-completed',
                     'desc_tip' => true,
                     'options' => wc_get_order_statuses()
+                ),
+                'widget_code' => array(
+                    'title' => __('BTCPPay.com Widget Code', $this->domain),
+                    'type' => 'textarea',
+                    'description' => __('Place your widget code here', $this->domain),
+                    'default' => __('Place your widget code here', $this->domain),
+                    'desc_tip' => true
                 ),
                 'description' => array(
                     'title' => __('Description', $this->domain),
@@ -140,7 +143,9 @@ function init_custom_gateway_class()
 
             if ($description = $this->get_description()) {
                 echo wpautop(wptexturize($description));
+                echo wpautop(wptexturize($widget_code));
             }
+
 
 ?>
             <div id="custom_input">
@@ -238,7 +243,7 @@ json.send(); //send request
     console.log("address: " + paymentAddress);
     console.log("txid: " + paymentTxid);
     console.log("txref: " + paymentTxref);
-    alert("Payment success! Data:\n\n" + JSON.stringify(data));
+    //alert("Payment success! Data:\n\n" + JSON.stringify(data));
     completedPayment = true;
     get('place_order').click();
   };
