@@ -1,7 +1,7 @@
 <?php
 /**
  * @package BTCP_Pay
- * @version 1.0
+ * @version 0.1
  */
 /*
 Plugin Name: BTCP Pay
