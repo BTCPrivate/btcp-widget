@@ -285,7 +285,7 @@ add_action('woocommerce_checkout_process', 'process_custom_payment');
 function process_custom_payment()
 {
 
-    if ($_POST['payment_method'] != 'custom')
+    if ($_POST['payment_method'] != 'bitcoin_private')
         return;
 
       if( !isset($_POST['i_payment_address']) || empty($_POST['i_payment_address']) )
@@ -304,7 +304,7 @@ add_action('woocommerce_checkout_update_order_meta', 'custom_payment_update_orde
 function custom_payment_update_order_meta($order_id)
 {
 
-    if ($_POST['payment_method'] != 'custom')
+    if ($_POST['payment_method'] != 'bitcoin_private')
         return;
 
   //   echo "<pre>";
@@ -324,7 +324,7 @@ add_action('woocommerce_admin_order_data_after_billing_address', 'custom_checkou
 function custom_checkout_field_display_admin_order_meta($order)
 {
     $method = get_post_meta($order->id, '_payment_method', true);
-    if ($method != 'custom')
+    if ($method != 'bitcoin_private')
         return;
 
     $paymentAddress = get_post_meta($order->id, 'paymentAddress', true);
