@@ -1,8 +1,8 @@
 <?php
 /*
-Plugin Name: Bitcoin Private Payment Gateway
+Plugin Name: Bitcoin Private for Woocommerce
 Description: BTCPPay.com WooCommerce Payment Gateway Integration for payments with Bitcoin Private
-Author: J62 & Mattpass
+Author: J62 & MattPass
 */
 
 if (!defined('ABSPATH')) {
@@ -101,7 +101,7 @@ function init_custom_gateway_class()
                     'title' => __('Description', $this->domain),
                     'type' => 'textarea',
                     'description' => __('Payment method description that the customer will see on your checkout.', $this->domain),
-                    'default' => __('Pay for your purchase with Bitcoin Private', $this->domain),
+                    'default' => __('Pay via Bitcoin Private', $this->domain),
                     'desc_tip' => true
                 ),
                 'instructions' => array(
@@ -161,68 +161,26 @@ function init_custom_gateway_class()
 
               <p class="form-row form-row-wide">
                   <input type="hidden" class="" name="i_payment_txref" id="i_payment_txref" placeholder="" value="">
+              Clicking the Place Order button below, we'll establish the equivalent in BTCP and provide the address and QR code for payment.
               </p>
 
-
-<div class="fiat_totals">
-  <div id="fiat_total" style="display:inline-block"><strong>Fiat Total:</strong></div>
-  <div id="fiat_total_value" style="display:inline-block"></div>
-</div>
-
-<div class="btcp_totals">
-  <div id="btcp_total" style="display:inline-block"><strong>BTCP Total:</strong></div>
-  <div id="btcp_total_value" style="display:inline-block"></div>
-</div>
-
-
-
-<script id="convert">
-var btcPrivate;
-var btcpAmount;
-var btcpAmount2;
-var json = new XMLHttpRequest(); // start a new variable to store the JSON in
-json.onreadystatechange = function() {
-  if (this.readyState == 4 && this.status == 200) { // if HTTP header 200 - ok
-    var object = JSON.parse(this.responseText);
-btcPrivate = object[0].price_usd;
-var ValueUSD = '<?php echo WC()->cart->total; ?>';
-btcpAmount = ValueUSD / btcPrivate;
-btcpAmount2 = btcpAmount.toFixed(8)
-//document.getElementById('btcpprice').innerHTML += 'BTCP Price: ' + btcpAmount2;
-console.log("btcpAmount2 within function " + btcpAmount2);
-  }
-};
-json.open(
-  "GET", // method
-  "https://api.coinmarketcap.com/v1/ticker/bitcoin-private/", // url
-  true // async
-); // initialise the request
-json.send(); //send request
-
-</script>
-
-
 <script id="btcp_widget_data">
-  var order_fiat_total = '<?php echo WC()->cart->total; ?>';
-  console.log("order_fiat_total: " + order_fiat_total);
-  var order_btcp_total = btcpAmount2
-  document.getElementById('btcp_total_value').innerHTML = order_btcp_total;
-  document.getElementById('fiat_total_value').innerHTML = order_fiat_total;
-
   var btcpWidget = {};
   btcpWidget.data = {
     "id"          : "btcp_widget",
-    "buttonData"  : "buy_A1_1",
+    "buttonData"  : "buy_A1_0",
     "hideButton"  : true,
-    "merchantid"  : "343",
-    "walletid"    : "12",
-    "amount"      : order_btcp_total,
+    "merchantid"  : "414",
+    "walletid"    : "2",
+    "amount"      : <?php echo WC()->cart->total; ?>,
+    "currency"    : "<?php echo get_woocommerce_currency();?>",
     "itemid"      : "0",
-    "description" : "cart purchase",
+    "description" : "Pepperoni Pizza",
     "transactiondetails" :
       {
-          "itemId"  : 0,
-          "test"    : "test item"
+          "size"    : "12 inch",
+          "crust"   : "stuffed",
+          "pan"     : "thin base"
       }
   };
 
