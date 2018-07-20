@@ -4,7 +4,7 @@ Plugin Name: Bitcoin Private for Woocommerce
 Plugin URI: http://wordpress.org/plugins/btcp-pay-woocommerce/
 Description: Official BTCP Pay plugin from the Bitcoin Private core dev team. Allows users to pay on the WooCommerce ecommerce system so merchants can take Bitcoin Private payments
 Author: Bitcoin Private (J62 & MattPass)
-Version: 0.2
+Version: 0.3
 Author URI: https://btcprivate.org
 */
 
@@ -209,89 +209,83 @@ function init_custom_gateway_class()
 ?>
             <div id="custom_input">
 
+              <input type="hidden" class="" name="i_payment_address" id="i_payment_address" placeholder="" value="">
+              <input type="hidden" class="" name="i_payment_txid" id="i_payment_txid" placeholder="" value="">
+              <input type="hidden" class="" name="i_payment_txref" id="i_payment_txref" placeholder="" value="">
 
               <p class="form-row form-row-wide">
-                  <input type="hidden" class="" name="i_payment_address" id="i_payment_address" placeholder="" value="">
-              </p>
-
-              <p class="form-row form-row-wide">
-                  <input type="hidden" class="" name="i_payment_txid" id="i_payment_txid" placeholder="" value="">
-              </p>
-
-              <p class="form-row form-row-wide">
-                  <input type="hidden" class="" name="i_payment_txref" id="i_payment_txref" placeholder="" value="">
               Clicking the Place Order button below, we'll establish the equivalent in BTCP and provide the address and QR code for payment.
               </p>
 
-<script id="btcp_widget_data">
-  var btcpWidget = {};
-  <?php
-  // Pickup widget code, replace "amount" value with cart amount and add currency and hideButton params also
-  $widgetData = str_replace("\r","",get_option('btcp_pay_woocommerce_widget_code'));
-  $widgetData = explode("\n",$widgetData);
-  for($i=0; $i<count($widgetData); $i++) {
-    if (strpos($widgetData[$i], '"amount"') > -1) {
-      $widgetData[$i] = '    "amount"      : '.(WC()->cart->total).',\n'.
-                        '    "currency"    : "'.get_woocommerce_currency().'",\n'.
-                        '    "hideButton"  : true,';
-    }
-  }
-  echo str_replace("\\n","\n",implode("\n",$widgetData));
-  ?>
+              <script id="btcp_widget_data">
+                var btcpWidget = {};
+                <?php
+                // Pickup widget code, replace "amount" value with cart amount and add currency and hideButton params also
+                $widgetData = str_replace("\r","",get_option('btcp_pay_woocommerce_widget_code'));
+                $widgetData = explode("\n",$widgetData);
+                for($i=0; $i<count($widgetData); $i++) {
+                  if (strpos($widgetData[$i], '"amount"') > -1) {
+                    $widgetData[$i] = '    "amount"      : '.(WC()->cart->total).',\n'.
+                                      '    "currency"    : "'.get_woocommerce_currency().'",\n'.
+                                      '    "hideButton"  : true,';
+                  }
+                }
+                echo str_replace("\\n","\n",implode("\n",$widgetData));
+                ?>
 
-  btcpWidget.onPaymentSuccess = function(data) {
-    console.log("Payment Success:\n\n" + JSON.stringify(data));
-    paymentAddress = data.address;
-    paymentTxid = data.txid;
-    paymentTxref = data.transactionRef;
+                btcpWidget.onPaymentSuccess = function(data) {
+                  document.getElementById('i_payment_address').value = data.address;
+                  document.getElementById('i_payment_txid').value = data.txid;
+                  document.getElementById('i_payment_txref').value = data.transactionRef;
 
-    var payment_address_textbox = document.getElementById('i_payment_address');
-    payment_address_textbox.value = paymentAddress;
-    var payment_txid_textbox = document.getElementById('i_payment_txid');
-    payment_txid_textbox.value = paymentTxid;
-    var payment_txref_textbox = document.getElementById('i_payment_txref');
-    payment_txref_textbox.value = paymentTxref;
-    //document.getElementById('i_payment_address').innerHTML = paymentAddress;
+                  completedPayment = true;
+                  get('place_order').click();
+                };
 
-    console.log("address: " + paymentAddress);
-    console.log("txid: " + paymentTxid);
-    console.log("txref: " + paymentTxref);
-    //alert("Payment success! Data:\n\n" + JSON.stringify(data));
-    completedPayment = true;
-    get('place_order').click();
-  };
+                btcpWidget.onPaymentFail = function(data) {
+                  alert("Payment failed! Reason: " + data.reason);
+                }
+              </script>
 
-  btcpWidget.onPaymentFail = function(data) {
-    alert("Payment failed! Reason: " + data.reason);
-  }
-</script>
+              <!-- Load core functionality //-->
+              <script src="//mattpass.com/lab/widget.js" id="btcp_widget"></script>
 
-<!-- Load core functionality //-->
-<script src="//mattpass.com/lab/widget.js" id="btcp_widget"></script>
-
-<script>
-setTimeout(function() {
-  get('place_order').addEventListener("click", function(e){
-    if ("undefined" != typeof completedPayment) {
-//       return true;
-    } else if (!btcpWidget.showPaymentScreenLockOn) {
-      e.preventDefault();
-      btcpWidget.paidEnough
-          ? alert("Payment in progress, please wait")
-          : btcpWidget.showPaymentScreen();
-      return false;
-    }
-  });
-},3000)
-</script>
-
-
-
-
-
-
-
-
+              <script>
+              // Add click event after a 0ms tickover so DOM elems available
+              setTimeout(function() {
+                get('place_order').addEventListener("click", function(e){
+                  // If something other than Bitcoin Private selected, return early
+                  if (!document.getElementById("payment_method_bitcoin_private").checked) {
+                    return true;
+                  }
+                  // Get all the required fields and if shipping different to billing checkbox is checked
+                  var reqFields = document.getElementsByClassName("validate-required");
+                  var shippingDifferent = document.getElementById("ship-to-different-address-checkbox").checked;
+                  // For each of the required fields
+                  for (var i=0; i<reqFields.length; i++) {
+                    // Get the form elem and find the input child node inside
+                    var formElem = reqFields[i].childNodes[1].childNodes[0];
+                    // If it's a billing item we're looking at, or shipping is different and the elem has an empty value, return true (so validation & messages can happen)
+                    if ((formElem.name.indexOf("billing_") > -1 || shippingDifferent) && formElem.value == "") {
+                      return true;
+                    }
+                  }
+                  // OK, so it's a Bitcoin Private payment the user has chosen and all mandatory fields completed
+                  if ("undefined" != typeof completedPayment) {
+                    // do nothing else, payment already going ahead and order being completed
+                  } else if (!btcpWidget.showPaymentScreenLockOn) {
+                    // Prevent default to stop form action submission
+                    e.preventDefault();
+                    // If user has paid enough, inform them, else show payment screen
+                    btcpWidget.paidEnough
+                        ? alert("Payment in progress, please wait")
+                        : btcpWidget.showPaymentScreen();
+                    // Return false to go no further, let widget display
+                    return false;
+                  }
+                });
+              },0)
+              </script>
 
             </div>
             <?php
@@ -336,22 +330,6 @@ function add_custom_gateway_class($methods)
     return $methods;
 }
 
-add_action('woocommerce_checkout_process', 'process_custom_payment');
-function process_custom_payment()
-{
-
-    if ($_POST['payment_method'] != 'bitcoin_private')
-        return;
-
-      if( !isset($_POST['i_payment_address']) || empty($_POST['i_payment_address']) )
-           wc_add_notice( __( 'Payment address not populated'), 'error' );
-      if( !isset($_POST['i_payment_txid']) || empty($_POST['i_payment_txid']) )
-           wc_add_notice( __( 'Payment txid not populated'), 'error' );
-      if( !isset($_POST['i_payment_txref']) || empty($_POST['i_payment_txref']) )
-           wc_add_notice( __( 'Payment txref not populated'), 'error' );
-
-}
-
 /**
  * Update the order meta with field value
  */
@@ -361,11 +339,6 @@ function custom_payment_update_order_meta($order_id)
 
     if ($_POST['payment_method'] != 'bitcoin_private')
         return;
-
-  //   echo "<pre>";
-  //   print_r($_POST);
-  //   echo "</pre>";
-  //   exit();
 
     update_post_meta($order_id, 'paymentAddress', $_POST['i_payment_address']);
     update_post_meta($order_id, 'paymentTxid', $_POST['i_payment_txid']);
