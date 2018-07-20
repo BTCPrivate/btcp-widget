@@ -1,13 +1,72 @@
 <?php
 /*
 Plugin Name: Bitcoin Private for Woocommerce
-Description: BTCPPay.com WooCommerce Payment Gateway Integration for payments with Bitcoin Private
-Author: J62 & MattPass
+Plugin URI: http://wordpress.org/plugins/btcp-pay-woocommerce/
+Description: Official BTCP Pay plugin from the Bitcoin Private core dev team. Allows users to pay on the WooCommerce ecommerce system so merchants can take Bitcoin Private payments
+Author: Bitcoin Private (J62 & MattPass)
+Version: 0.2
+Author URI: https://btcprivate.org
 */
 
+// Exit if accessed directly
 if (!defined('ABSPATH')) {
-    exit; // Exit if accessed directly
+    exit;
 }
+
+// Go to settings page after activation
+function btcp_pay_woocommerce_activate( $plugin ) {
+    if( $plugin == plugin_basename( __FILE__ ) ) {
+        exit(wp_redirect(admin_url('options-general.php?page=btcp-pay-woocommerce')));
+    }
+}
+add_action('activated_plugin', 'btcp_pay_woocommerce_activate');
+
+// Add option to admin menu > settings section
+add_action('admin_menu', function() {
+  add_options_page('BTCP Pay WooCommerce Settings', 'BTCP Pay WooCommerce', 'manage_options', 'btcp-pay-woocommerce', 'btcp_pay_woocommerce');
+});
+
+// Form for user to paste widget code into
+function btcp_pay_woocommerce() {
+ ?>
+   <h1>BTCP Pay WooCommerce Settings</h1>
+   <p>Please paste the <strong>btcpWidget.data</strong> section from your widget code from your account on the <a href="https://btcppay.com" target="_blank">btcppay.com</a> site into the box below (as per the example below) and we'll take take of it working within WooCommerce.</p>
+   <p>(Leave the "amount" line with a fixed value, we'll change to the users cart total automatically. We'll also add the currency and hideButton params for you automatically, no need to set those yourself).</p>
+   <p>You can return to this settings page at any time under the Settings > BTCP Pay WooCommerce section on the left.</p>
+   <div class="wrap">
+     <form action="options.php" method="post">
+       <?php
+       settings_fields( 'btcp-pay-woocommerce-settings' );
+       do_settings_sections( 'btcp-pay-woocommerce-settings' );
+       ?>
+       <textarea placeholder='Paste the btcpWidget.data JSON from your BTCP Pay widget code here, eg:
+
+btcpWidget.data = {
+    "id"          : "btcp_widget",
+    "buttonData"  : "buy_A1_0",
+    "hideButton"  : true,
+    "merchantid"  : "414",
+    "walletid"    : "2",
+    "amount"      : 123.45,
+    "itemid"      : "0",
+    "description" : "Pepperoni Pizza",
+    "transactiondetails" :
+      {
+          "size"    : "12 inch",
+          "crust"   : "stuffed",
+          "pan"     : "thin base"
+      }
+  };' name="btcp_pay_woocommerce_widget_code" style="width: 300px; height: 400px"><?php echo esc_attr( get_option('btcp_pay_woocommerce_widget_code') ); ?></textarea>
+
+       <?php submit_button(); ?>
+     </form>
+   </div>
+ <?php
+}
+// Register that DB setting
+add_action('admin_init', function() {
+  register_setting('btcp-pay-woocommerce-settings', 'btcp_pay_woocommerce_widget_code');
+});
 
 
 add_action('plugins_loaded', 'init_custom_gateway_class');
@@ -166,23 +225,19 @@ function init_custom_gateway_class()
 
 <script id="btcp_widget_data">
   var btcpWidget = {};
-  btcpWidget.data = {
-    "id"          : "btcp_widget",
-    "buttonData"  : "buy_A1_0",
-    "hideButton"  : true,
-    "merchantid"  : "414",
-    "walletid"    : "2",
-    "amount"      : <?php echo WC()->cart->total; ?>,
-    "currency"    : "<?php echo get_woocommerce_currency();?>",
-    "itemid"      : "0",
-    "description" : "Pepperoni Pizza",
-    "transactiondetails" :
-      {
-          "size"    : "12 inch",
-          "crust"   : "stuffed",
-          "pan"     : "thin base"
-      }
-  };
+  <?php
+  // Pickup widget code, replace "amount" value with cart amount and add currency and hideButton params also
+  $widgetData = str_replace("\r","",get_option('btcp_pay_woocommerce_widget_code'));
+  $widgetData = explode("\n",$widgetData);
+  for($i=0; $i<count($widgetData); $i++) {
+    if (strpos($widgetData[$i], '"amount"') > -1) {
+      $widgetData[$i] = '    "amount"      : '.(WC()->cart->total).',\n'.
+                        '    "currency"    : "'.get_woocommerce_currency().'",\n'.
+                        '    "hideButton"  : true,';
+    }
+  }
+  echo str_replace("\\n","\n",implode("\n",$widgetData));
+  ?>
 
   btcpWidget.onPaymentSuccess = function(data) {
     console.log("Payment Success:\n\n" + JSON.stringify(data));
