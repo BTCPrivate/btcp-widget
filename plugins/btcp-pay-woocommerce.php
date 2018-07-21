@@ -4,13 +4,52 @@ Plugin Name: Bitcoin Private for Woocommerce
 Plugin URI: http://wordpress.org/plugins/btcp-pay-woocommerce/
 Description: Official BTCP Pay plugin from the Bitcoin Private core dev team. Allows users to pay on the WooCommerce ecommerce system so merchants can take Bitcoin Private payments
 Author: Bitcoin Private (J62 & MattPass)
-Version: 0.3
+Version: 0.4
 Author URI: https://btcprivate.org
 */
 
 // Exit if accessed directly
 if (!defined('ABSPATH')) {
     exit;
+}
+
+// Function to change format of prices shown
+function addPriceSuffix() {
+  $currency = "BTCP";
+  $format = '%2$s&nbsp;' . $currency;
+
+  return $format;
+}
+
+// Pickup widget code, split into array pieces and set a flag that for now we haven't determined user has set "currency" : BTCP"
+$widgetData = str_replace("\r","",get_option('btcp_pay_woocommerce_widget_code'));
+$widgetData = explode("\n",$widgetData);
+$btcpWidgetCurrencySet = false;
+// For each line in widget data
+for($i=0; $i<count($widgetData); $i++) {
+  // If we've found the currency line and the value is "BTCP"
+  if (strpos($widgetData[$i], '"currency"') > -1 && explode('"',$widgetData[$i])[3] === "BTCP") {
+    // User has set currency, replace all prices shown into the format
+    $btcpWidgetCurrencySet = true;
+    add_action('woocommerce_price_format', 'addPriceSuffix');
+    ?>
+    <script>
+      // Update cart total, as doesn't seem to update using above, this is an override
+      setInterval(function() {
+        var symbol = document.getElementsByClassName("woocommerce-Price-currencySymbol")[0];
+        if (symbol && symbol.innerHTML !== "") {
+          // Clear symbol
+          symbol.innerHTML = "";
+          // Create new span node and add " BTCP" into it
+          var node = document.createElement("SPAN");
+          node.innerHTML = "&nbsp;BTCP";
+          // Insert that node just after the price
+          symbol.parentNode.insertBefore(node, symbol.parentNode.children[1]);
+        }
+      },10)
+    </script>
+    <?php
+  }
 }
 
 // Go to settings page after activation
@@ -31,7 +70,7 @@ function btcp_pay_woocommerce() {
  ?>
    <h1>BTCP Pay WooCommerce Settings</h1>
    <p>Please paste the <strong>btcpWidget.data</strong> section from your widget code from your account on the <a href="https://btcppay.com" target="_blank">btcppay.com</a> site into the box below (as per the example below) and we'll take take of it working within WooCommerce.</p>
-   <p>(Leave the "amount" line with a fixed value, we'll change to the users cart total automatically. We'll also add the currency and hideButton params for you automatically, no need to set those yourself).</p>
+   <p>(Leave the "amount" line with a fixed value, we'll change to the users cart total automatically. We'll also add the currency and hideButton params for you automatically, no need to set those yourself. If you add "currency" : "BTCP" however, WooCommerce will show all prices as BTCP being the currency).</p>
    <p>You can return to this settings page at any time under the Settings > BTCP Pay WooCommerce section on the left.</p>
    <div class="wrap">
      <form action="options.php" method="post">
@@ -220,17 +259,31 @@ function init_custom_gateway_class()
               <script id="btcp_widget_data">
                 var btcpWidget = {};
                 <?php
-                // Pickup widget code, replace "amount" value with cart amount and add currency and hideButton params also
+                // Pickup widget code and output after replacing "amount" value with cart amount and adding currency (unless user specified BTCP) and hideButton params also
                 $widgetData = str_replace("\r","",get_option('btcp_pay_woocommerce_widget_code'));
                 $widgetData = explode("\n",$widgetData);
                 for($i=0; $i<count($widgetData); $i++) {
+                  global $btcpWidgetCurrencySet;
                   if (strpos($widgetData[$i], '"amount"') > -1) {
                     $widgetData[$i] = '    "amount"      : '.(WC()->cart->total).',\n'.
-                                      '    "currency"    : "'.get_woocommerce_currency().'",\n'.
+                                      ($btcpWidgetCurrencySet
+                                        ? ''
+                                        : '    "currency"   : "'.get_woocommerce_currency().'",\n'
+                                      ).
                                       '    "hideButton"  : true,';
                   }
                 }
                 echo str_replace("\\n","\n",implode("\n",$widgetData));
+                // Hide block overlays, seem to always show due to overriding currency?
+                if ($btcpWidgetCurrencySet) {
+                ?>
+                </script>
+                <style>
+                  .blockOverlay {display: none !important}
+                </style>
+                <script>
+                <?php
+                }
                 ?>
 
                 btcpWidget.onPaymentSuccess = function(data) {
@@ -364,3 +417,4 @@ function custom_checkout_field_display_admin_order_meta($order)
     echo '<p><strong>' . __('BTCP Pay TransactionRef') . ':</strong> ' . $paymentTxref . '</p>';
 
 }
+
