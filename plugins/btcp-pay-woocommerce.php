@@ -4,7 +4,7 @@ Plugin Name: Bitcoin Private for Woocommerce
 Plugin URI: http://wordpress.org/plugins/btcp-pay-woocommerce/
 Description: Official BTCP Pay plugin from the Bitcoin Private core dev team. Allows users to pay on the WooCommerce ecommerce system so merchants can take Bitcoin Private payments
 Author: Bitcoin Private (J62 & MattPass)
-Version: 0.4
+Version: 1.0
 Author URI: https://btcprivate.org
 */
 
@@ -83,7 +83,6 @@ function btcp_pay_woocommerce() {
 btcpWidget.data = {
     "id"          : "btcp_widget",
     "buttonData"  : "buy_A1_0",
-    "hideButton"  : true,
     "merchantid"  : "414",
     "walletid"    : "2",
     "amount"      : 123.45,
@@ -107,7 +106,7 @@ add_action('admin_init', function() {
   register_setting('btcp-pay-woocommerce-settings', 'btcp_pay_woocommerce_widget_code');
 });
 
-
+// When plugins loaded, run function to init our BTCP Pay plugin
 add_action('plugins_loaded', 'init_custom_gateway_class');
 function init_custom_gateway_class()
 {
@@ -129,7 +128,7 @@ function init_custom_gateway_class()
             $this->icon               = apply_filters('woocommerce_custom_gateway_icon', '');
             $this->has_fields         = false;
             $this->method_title       = __('Bitcoin Private', $this->domain);
-            $this->method_description = __('Allows payments with BTCPPAY.com gateway.', $this->domain);
+            $this->method_description = __('Allows payments with btcppay.com gateway.', $this->domain);
 
             // Load the settings.
             $this->init_form_fields();
@@ -138,7 +137,7 @@ function init_custom_gateway_class()
             // Define user set variables
             $this->title        = $this->get_option('title');
             $this->description  = $this->get_option('description');
-            $this->widget_code  = $this->get_option('widget_code');
+            //$this->widget_code  = $this->get_option('widget_code');
             $this->instructions = $this->get_option('instructions', $this->description);
             $this->order_status = $this->get_option('order_status', 'completed');
 
@@ -169,7 +168,7 @@ function init_custom_gateway_class()
                 'enabled' => array(
                     'title' => __('Enable/Disable', $this->domain),
                     'type' => 'checkbox',
-                    'label' => __('Enable Bitcoin Private (BTCPPay.com) Custom Payment', $this->domain),
+                    'label' => __('Enable Bitcoin Private (btcppay.com) Custom Payment', $this->domain),
                     'default' => 'yes'
                 ),
                 'title' => array(
@@ -183,18 +182,18 @@ function init_custom_gateway_class()
                     'title' => __('Order Status', $this->domain),
                     'type' => 'select',
                     'class' => 'wc-enhanced-select',
-                    'description' => __('Choose whether status you wish after checkout.', $this->domain),
+                    'description' => __('Choose which status you wish after checkout.', $this->domain),
                     'default' => 'wc-completed',
                     'desc_tip' => true,
                     'options' => wc_get_order_statuses()
                 ),
-                'widget_code' => array(
-                    'title' => __('BTCPPay.com Widget Code', $this->domain),
+/*                 'widget_code' => array(
+                    'title' => __('btcppay.com Widget Code', $this->domain),
                     'type' => 'textarea',
                     'description' => __('Place your widget code here', $this->domain),
                     'default' => __('Place your widget code here', $this->domain),
                     'desc_tip' => true
-                ),
+                ), */
                 'description' => array(
                     'title' => __('Description', $this->domain),
                     'type' => 'textarea',
@@ -241,7 +240,7 @@ function init_custom_gateway_class()
 
             if ($description = $this->get_description()) {
                 echo wpautop(wptexturize($description));
-                echo wpautop(wptexturize($widget_code));
+//                 echo wpautop(wptexturize($widget_code));
             }
 
 
@@ -287,10 +286,11 @@ function init_custom_gateway_class()
                 ?>
 
                 btcpWidget.onPaymentSuccess = function(data) {
+                  // Set 3 x transaction data values
                   document.getElementById('i_payment_address').value = data.address;
                   document.getElementById('i_payment_txid').value = data.txid;
                   document.getElementById('i_payment_txref').value = data.transactionRef;
-
+                  // Set flag and place order to complete
                   completedPayment = true;
                   get('place_order').click();
                 };
@@ -301,7 +301,7 @@ function init_custom_gateway_class()
               </script>
 
               <!-- Load core functionality //-->
-              <script src="//mattpass.com/lab/widget.js" id="btcp_widget"></script>
+              <script src="//btcppay.com/widget.js" id="btcp_widget"></script>
 
               <script>
               // Add click event after a 0ms tickover so DOM elems available
@@ -313,7 +313,7 @@ function init_custom_gateway_class()
                   }
                   // Get all the required fields and if shipping different to billing checkbox is checked
                   var reqFields = document.getElementsByClassName("validate-required");
-                  var shippingDifferent = document.getElementById("ship-to-different-address-checkbox").checked;
+                  var shippingDifferent = document.getElementById("ship-to-different-address-checkbox") && document.getElementById("ship-to-different-address-checkbox").checked;
                   // For each of the required fields
                   for (var i=0; i<reqFields.length; i++) {
                     // Get the form elem and find the input child node inside
