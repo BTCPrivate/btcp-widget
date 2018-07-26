@@ -298,6 +298,7 @@ document.getElementsByTagName('head')[0].innerHTML += '<style>'+btcpWidgetStyles
     btcpWidget.widget.style.fontFamily = "Arial";
     btcpWidget.widget.style.fontSize = "13px";
     btcpWidget.widget.style.borderRadius = "5px";
+    btcpWidget.widget.style.textAlign = "left";
     // Set logo in background, replacing fill colors in SVG and setting background X & Y position
     btcpWidget.widget.style.background = 'url(\'data:image/svg+xml;charset=UTF-8,'+
         btcpWidget.logo
@@ -359,6 +360,7 @@ btcpWidget.returnScreenHeading = function() {
     o.style.fontFamily = "Arial";
     o.style.paddingTop = "1500px";
     o.style.transition = "all 0.3s ease-in-out";
+    o.style.zIndex = "1000";
 
     // Close link
     var c = document.createElement("div");
