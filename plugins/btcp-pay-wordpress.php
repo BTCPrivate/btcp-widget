@@ -30,7 +30,7 @@ add_action('admin_menu', function() {
 function btcp_pay_wordpress() {
  ?>
    <h1>BTCP Pay WordPress Settings</h1>
-   <p>Please paste the <strong>btcpWidget.data</strong> section from your widget code from your account on the <a href="https://btcppay.com" target="_blank">btcppay.com</a> site into the box below (as per the example below) and we'll take take of it working within WordPress.</p>
+   <p>Please paste the widget code from your account on the <a href="https://btcppay.com" target="_blank">btcppay.com</a> site into the box below (as per the example below) and we'll take take of it working within WordPress.</p>
    <p>(Leave the "amount" line with a fixed value and we'll use that fixed value, else you can pass the value in dynamically as detailed below. Also please consider unescaping further, eg \n becomes \\n).</p>
    <p><b>Usage within areas you control from Admin, eg post pages, can use WordPress's 'Shortcodes':</b><br>
      - Fixed value use: <b>[btcp_pay_widget]</b><br>
